@@ -390,40 +390,43 @@ _Or use directly:_
 });
 
 gmd({
-  pattern: "delete",
-  aliases: ["del"],
-  category: "owner",
+  pattern: "del",
+  aliases: ["delete", "dlt", "remove"],
   react: "🗑️",
-  description: "Delete a message (reply to the message)",
+  category: "group",
+  description: "Delete a quoted message",
 }, async (from, Prince, conText) => {
-  const { isSuperUser, quoted, reply, react } = conText;
+  const {
+    reply,
+    react,
+    isSuperUser,
+    isAdmin,
+    isGroup,
+    quotedMsg,
+    quotedKey,
+    isBotAdmin,
+  } = conText;
+
+  if (!isGroup) return reply("❌ This command only works in groups!");
+  if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
+
+  if (!quotedMsg || !quotedKey)
+    return reply("❌ Please quote a message to delete!");
+
   try {
-    if (!isSuperUser) return reply("❌ Owner Only Command!");
-    if (!quoted) return reply("*Reply to a message to delete it.*");
+    const isBotMessage = quotedKey.fromMe;
 
-    const key = {
-      remoteJid: from,
-      fromMe: quoted.fromMe,
-      id: quoted.id,
-      participant: quoted.sender || (quoted.key && quoted.key.participant) || (from.endsWith('@g.us') ? quoted.key.participant : undefined)
-    };
-
-    // If it's a group and we're trying to delete someone else's message, we MUST have participant
-    if (from.endsWith('@g.us') && !quoted.fromMe && !key.participant) {
-        key.participant = quoted.key.participant || quoted.sender;
+    if (!isBotMessage && !isBotAdmin) {
+      return reply(
+        "❌ Bot needs admin rights to delete others' messages in groups!",
+      );
     }
 
-    await Prince.sendMessage(from, { delete: key });
+    await Prince.sendMessage(from, { delete: quotedKey });
     await react("✅");
-  } catch (e) {
-    console.log("Delete error details:", JSON.stringify(e, null, 2));
-    console.log("Delete error message:", e.message);
+  } catch (error) {
     await react("❌");
-    
-    if (e.message.includes('not-authorized') || e.status === 403) {
-      return reply("❌ *Error:* I need to be an admin to delete other people's messages in groups.");
-    }
-    reply(`*Failed to delete message: ${e.message || 'Unknown error'}*`);
+    return reply(`❌ Failed to delete message: ${error.message}`);
   }
 });
 
