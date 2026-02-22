@@ -49,7 +49,7 @@ gmd(
     }
 
     try {
-      await reply("🔍 Checking for New Updates...");
+    //await reply("🔍 Checking for New Updates...");
 
       // FORCE PRINCE-MDX REPO
       const repoName = "Princemaye/PRINCE-MDX";
@@ -73,7 +73,7 @@ gmd(
       const commitMessage = commitData.commit.message;
 
       await reply(
-        `🔄 Updating Bot...\n\n` +
+        `🔄 Updating Bot...\n` +
         `👤 Author: ${authorName} \n` +
         `📅 Date: ${commitDate}\n` +
         `💬 Message: ${commitMessage}`
