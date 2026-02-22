@@ -615,10 +615,17 @@ gmd(
     description: "View all settings for this group",
   },
   async (from, Prince, conText) => {
-    const { reply, react, isAdmin, isSuperAdmin, isGroup, groupName } = conText;
+    const { reply, react, isAdmin, isSuperAdmin, isGroup, groupName, botPic, sender, newsletterJid, botName, getContextInfo, mek } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isAdmin && !isSuperAdmin) return reply("❌ Admin Only Command!");
     try {
+      let profilePic;
+      try {
+        profilePic = await Prince.profilePictureUrl(from, 'image');
+      } catch (e) {
+        profilePic = botPic;
+      }
+
       const settings = getAllGroupSettings(from);
 
       const welcomeStatus = isSettingEnabled(settings.WELCOME_MESSAGE) ? "ON" : "OFF";
@@ -657,7 +664,11 @@ gmd(
       msg += `\n_Use .setwelcome, .setgoodbye, .antilink, etc to modify_`;
 
       await react("✅");
-      await reply(msg);
+      await Prince.sendMessage(from, {
+        image: { url: profilePic },
+        caption: msg,
+        contextInfo: getContextInfo(sender, newsletterJid, botName)
+      }, { quoted: mek });
     } catch (error) {
       await reply(`❌ Error: ${error.message}`);
     }
