@@ -405,14 +405,14 @@ gmd({
       remoteJid: from,
       fromMe: quoted.fromMe,
       id: quoted.id,
-      participant: quoted.sender || quoted.key.participant || from,
+      participant: quoted.sender || (quoted.key && quoted.key.participant) || from,
     };
 
     // If it's a group, we might need to use the participant from the key if quoted.sender is missing
     if (from.endsWith('@g.us')) {
         // Ensure participant is present for group message deletion
         if (!key.participant || key.participant === from) {
-            key.participant = quoted.key.participant || quoted.sender;
+            key.participant = (quoted.key && quoted.key.participant) || quoted.sender;
         }
     }
 
