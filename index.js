@@ -333,30 +333,47 @@ async function startPrince() {
             }
         });
 
-        PrinceChatBot(
-            Prince,
-            chatBot,
-            chatBotMode,
-            createContext,
-            createContext2,
-            googleTTS,
-        );
+            PrinceChatBot(
+                Prince,
+                chatBot,
+                chatBotMode,
+                createContext,
+                createContext2,
+                googleTTS,
+            );
 
-        Prince.ev.on("messages.upsert", async ({ messages }) => {
-            const message = messages[0];
-            if (!message?.message || message.key.fromMe) return;
-            const chatJid = message.key.remoteJid;
-            if (chatJid && chatJid.endsWith("@g.us")) {
-                const groupAntiLink = getGroupSetting(
-                    chatJid,
-                    "ANTILINK",
-                    "false",
-                );
-                if (groupAntiLink !== "false") {
-                    await PrinceAntiLink(Prince, message, groupAntiLink);
+            Prince.ev.on("messages.upsert", async ({ messages }) => {
+                const message = messages[0];
+                if (!message?.message || message.key.fromMe) return;
+                const chatJid = message.key.remoteJid;
+                if (chatJid && chatJid.endsWith("@g.us")) {
+                    const groupAntiLink = getGroupSetting(
+                        chatJid,
+                        "ANTILINK",
+                        "false",
+                    );
+                    if (groupAntiLink !== "false") {
+                        await PrinceAntiLink(Prince, message, groupAntiLink);
+                    }
+                    
+                    const groupStatusMention = getGroupSetting(
+                        chatJid,
+                        "STATUS_MENTION",
+                        "false",
+                    );
+                    if (groupStatusMention !== "false") {
+                        const messageType = getContentType(message.message);
+                        const body = messageType === 'conversation'
+                            ? message.message.conversation
+                            : message.message[messageType]?.text || 
+                              message.message[messageType]?.caption || '';
+                        
+                        if (body && (body.includes('@everyone') || body.includes('@status'))) {
+                            await PrinceStatusMention(Prince, message, groupStatusMention);
+                        }
+                    }
                 }
-            }
-        });
+            });
 
         Prince.ev.on("messages.upsert", async (mek) => {
             try {

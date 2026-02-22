@@ -84,19 +84,22 @@ const PrinceAntiLink = async (Prince, message, antiLink) => {
         if (!isGroup || antiLink === 'false') return;
 
         const groupMetadata = await Prince.groupMetadata(from);
-        const groupAdmins = groupMetadata.participants
+        const participants = groupMetadata.participants || [];
+        const groupAdmins = participants
             .filter((member) => member.admin)
             .map((admin) => admin.id);
 
         if (groupAdmins.includes(sender)) return;
 
-        const messageType = Object.keys(message.message)[0];
+        const messageType = getContentType(message.message);
         const body = messageType === 'conversation'
             ? message.message.conversation
-            : message.message[messageType]?.text || '';
+            : message.message[messageType]?.text || 
+              message.message[messageType]?.caption || '';
 
         if (!body || !isAnyLink(body)) return;
 
+        // Delete the message
         await Prince.sendMessage(from, { delete: message.key });
 
         if (antiLink === 'kick') {
@@ -117,17 +120,103 @@ const PrinceAntiLink = async (Prince, message, antiLink) => {
                 }
             );
         } else if (antiLink === 'warn') {
-            await Prince.sendMessage(
-                from,
-                {
-                    text: `⚠️ Warning @${sender.split('@')[0]}!\nLinks are not allowed in this group!`,
-                    mentions: [sender],
-                }
-            );
+            const warnings = await addWarning(from, sender, "Sending links is not allowed!");
+            if (warnings >= 3) {
+                await Prince.groupParticipantsUpdate(from, [sender], 'remove');
+                await Prince.sendMessage(from, { 
+                    text: `🚫 @${sender.split('@')[0]} has been kicked for reaching 3 warnings (Anti-Link).`, 
+                    mentions: [sender] 
+                });
+                await resetWarnings(from, sender);
+            } else {
+                await Prince.sendMessage(
+                    from,
+                    {
+                        text: `⚠️ Warning @${sender.split('@')[0]}!\nLinks are not allowed in this group! Warning: ${warnings}/3`,
+                        mentions: [sender],
+                    }
+                );
+            }
         }
     } catch (err) {
         console.error('Anti-link error:', err);
     }
+};
+
+const PrinceStatusMention = async (Prince, message, mode) => {
+    try {
+        if (!message?.message || message.key.fromMe) return;
+        const from = message.key.remoteJid;
+        const sender = message.key.participant || message.key.remoteJid;
+        const isGroup = from.endsWith('@g.us');
+
+        if (!isGroup || mode === 'false') return;
+
+        const groupMetadata = await Prince.groupMetadata(from);
+        const participants = groupMetadata.participants || [];
+        const groupAdmins = participants
+            .filter((member) => member.admin)
+            .map((admin) => admin.id);
+
+        if (groupAdmins.includes(sender)) return;
+        
+        // Delete the message
+        await Prince.sendMessage(from, { delete: message.key });
+
+        if (mode === 'kick') {
+            await Prince.groupParticipantsUpdate(from, [sender], 'remove');
+            await Prince.sendMessage(
+                from,
+                {
+                    text: `⚠️ ${botName || 'Prince Md'} status-mention active!\nUser @${sender.split('@')[0]} has been kicked for tagging everyone.`,
+                    mentions: [sender],
+                }
+            );
+        } else if (mode === 'delete') {
+            await Prince.sendMessage(
+                from,
+                {
+                    text: `⚠️ ${botName || 'Prince Md'} status-mention active!\nTagging everyone is not allowed here @${sender.split('@')[0]}!`,
+                    mentions: [sender],
+                }
+            );
+        } else if (mode === 'warn') {
+            const warnings = await addWarning(from, sender, "Tagging everyone is not allowed!");
+            if (warnings >= 3) {
+                await Prince.groupParticipantsUpdate(from, [sender], 'remove');
+                await Prince.sendMessage(from, { 
+                    text: `🚫 @${sender.split('@')[0]} has been kicked for reaching 3 warnings (Status Mention).`, 
+                    mentions: [sender] 
+                });
+                await resetWarnings(from, sender);
+            } else {
+                await Prince.sendMessage(
+                    from,
+                    {
+                        text: `⚠️ Warning @${sender.split('@')[0]}!\nTagging everyone is not allowed in this group! Warning: ${warnings}/3`,
+                        mentions: [sender],
+                    }
+                );
+            }
+        }
+    } catch (err) {
+        console.error('Status mention action error:', err);
+    }
+};
+
+module.exports = {
+    logger,
+    emojis,
+    PrinceAutoReact,
+    PrinceTechApi,
+    PrinceApiKey,
+    PrinceAntiLink,
+    PrinceStatusMention,
+    PrinceAutoBio,
+    PrinceChatBot,
+    PrincePresence,
+    PrinceAntiDelete,
+    PrinceAnticall,
 };
 
 
