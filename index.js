@@ -54,6 +54,9 @@ const {
     verifyJidState,
     PrincePresence,
     PrinceAntiDelete,
+    addWarning,
+    getUserWarnings,
+    resetWarnings
 } = require("./mayel");
 
 const {
@@ -636,6 +639,80 @@ async function startPrince() {
                 }
             }
             if (autoRead === "true") await Prince.readMessages([ms.key]);
+            if (autoRead === "commands" && isCommand) await Prince.readMessages([ms.key]);
+
+            // ============ ANTI-GROUP MENTION SYSTEM ============
+            const antiGroupMention = getSetting('ANTI_GROUP_MENTION', config.ANTI_GROUP_MENTION || '');
+            const antiMentionAction = getSetting('ANTI_GROUP_MENTION_ACTION', config.ANTI_GROUP_MENTION_ACTION || 'warn').toLowerCase();
+            
+            if (
+                isGroup &&
+                antiGroupMention.includes(from) &&
+                !ms.key.fromMe &&
+                !isAdmin &&
+                type === 'groupStatusMentionMessage'
+            ) {
+                try {
+                    if (!isBotAdmin) {
+                        await Prince.sendMessage(from, { text: '*The ANTI_GROUP_MENTION process is enabled in this group, but the bot needs to be an admin to run. ⛔️*' }, { quoted: ms });
+                    } else if (isSuperUser) {
+                        // Skip superusers/owners
+                    } else if (antiMentionAction === 'false') {
+                        // Disabled
+                    } else {
+                        // STEP 1: ALWAYS DELETE THE MESSAGE FIRST
+                        await Prince.sendMessage(from, { delete: ms.key });
+                        
+                        const senderNumber = sender.split('@')[0];
+                        
+                        // STEP 2: APPLY THE SELECTED ACTION
+                        if (antiMentionAction === 'delete') {
+                            await Prince.sendMessage(from, {
+                                text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Your group mention message was removed.`,
+                                mentions: [sender]
+                            });
+                        } else if (antiMentionAction === 'kick') {
+                            await Prince.sendMessage(from, {
+                                text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Group mentions are not allowed. You have been removed from the group.`,
+                                mentions: [sender]
+                            });
+                            await Prince.groupParticipantsUpdate(from, [sender], "remove");
+                            resetWarnings(from, sender);
+                        } else if (antiMentionAction === 'warn') {
+                            const userWarns = getUserWarnings(from, sender);
+                            const newWarningCount = addWarning(from, sender, "Sent group mention message", "anti-group-mention");
+                            
+                            let warningMessage = '';
+                            let shouldKick = false;
+                            
+                            if (newWarningCount >= 3) {
+                                shouldKick = true;
+                                warningMessage = `🚫 *Final Warning Exceeded!*\n@${senderNumber}, You have received 3 warnings for group mentions and have been removed from the group.`;
+                            } else {
+                                const warningMessages = [
+                                    `⚠️ *Warning 1/3*\n@${senderNumber}, Group mentions are not allowed. Your message was removed.`,
+                                    `⚠️ *Warning 2/3*\n@${senderNumber}, Another group mention detected. Next violation will result in removal.`,
+                                    `⚠️ *Final Warning 3/3*\n@${senderNumber}, One more group mention and you will be removed.`
+                                ];
+                                warningMessage = warningMessages[newWarningCount - 1];
+                            }
+                            
+                            await Prince.sendMessage(from, {
+                                text: warningMessage,
+                                mentions: [sender]
+                            });
+                            
+                            if (shouldKick) {
+                                await Prince.groupParticipantsUpdate(from, [sender], "remove");
+                                resetWarnings(from, sender);
+                            }
+                        }
+                        console.log(`✅ Anti-group mention triggered in ${groupName} by ${senderNumber}`);
+                    }
+                } catch (error) {
+                    console.error('Anti-group mention error:', error);
+                }
+            }
             if (autoRead === "commands" && isCommand)
                 await Prince.readMessages([ms.key]);
 

@@ -1,0 +1,102 @@
+       
+// ============ ANTI-GROUP MENTION SYSTEM ============
+// Parse config values
+const anti_mention_value = config?.ANTI_GROUP_MENTION_VALUE?.includes(',')
+  ? config?.ANTI_GROUP_MENTION_VALUE?.split(',')
+  : [config?.ANTI_GROUP_MENTION_VALUE] || [];
+
+// Check for groupStatusMentionMessage
+if (
+  isGroup &&
+  config?.ANTI_GROUP_MENTION?.includes(from) &&
+  !isMe &&
+  !isAdmins &&
+  mek.type === 'groupStatusMentionMessage'
+) {
+  try {
+    if (!isBotAdmins) {
+      return reply('*The ANTI_GROUP_MENTION process is enabled in this group, but the bot needs to be an admin to run. ⛔️*');
+    }
+    
+    if (isDev) {
+      return reply("*ANTI_GROUP_MENTION message found, but I can't remove owners here. ❗️*");
+    }
+
+    // Check if anti-group-mention is disabled
+    if (config?.ANTI_GROUP_MENTION_ACTION?.toLowerCase() === 'false') {
+      console.log(`⏭️ ANTI_GROUP_MENTION is disabled for ${from}, ignoring...`);
+      return;
+    }
+
+    // STEP 1: ALWAYS DELETE THE MESSAGE FIRST
+    await conn.sendMessage(from, { delete: mek.key });
+    
+    // Get anti-group-mention action mode
+    const antiMentionAction = config?.ANTI_GROUP_MENTION_ACTION?.toLowerCase() || 'warn';
+    
+    // STEP 2: APPLY THE SELECTED ACTION
+    if (antiMentionAction === 'delete') {
+      // Just delete - no warnings or kicks
+      await conn.sendMessage(from, {
+        text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Your group mention message was removed.`,
+        mentions: [sender]
+      });
+      
+    } else if (antiMentionAction === 'kick') {
+      // Immediate kick after deleting
+      await conn.sendMessage(from, {
+        text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Group mentions are not allowed. You have been removed from the group.`,
+        mentions: [sender]
+      });
+      await conn.groupParticipantsUpdate(from, [sender], "remove");
+      
+      // Reset warnings if using warning system
+      if (warning_db) {
+        await warning_db.resetWarnings(from, sender);
+      }
+      
+    } else if (antiMentionAction === 'warn') {
+      // Warning system after deleting
+      let warningMessage = '';
+      let shouldKick = false;
+      
+      if (warning_db) {
+        // Get user's current warnings
+        const userWarnings = await warning_db.getUserWarnings(from, sender);
+        const currentWarnings = userWarnings.count || 0;
+        
+        // Add warning for group mention
+        const newWarningCount = await warning_db.addWarning(from, sender, "Sent group mention message", "anti-group-mention");
+        
+        if (newWarningCount >= 3) {
+          // 3rd warning - kick the user
+          shouldKick = true;
+          warningMessage = `🚫 *Final Warning Exceeded!*\n@${senderNumber}, You have received 3 warnings for group mentions and have been removed from the group.`;
+        } else {
+          // Send warning message
+          const warningMessages = [
+            `⚠️ *Warning 1/3*\n@${senderNumber}, Group mentions are not allowed. Your message was removed.`,
+            `⚠️ *Warning 2/3*\n@${senderNumber}, Another group mention detected. Next violation will result in removal.`,
+            `⚠️ *Final Warning 3/3*\n@${senderNumber}, One more group mention and you will be removed.`
+          ];
+          warningMessage = warningMessages[Math.min(newWarningCount - 1, 2)];
+        }
+      } else {
+        // If warning_db is not available, use simple message
+        warningMessage = `⚠️ *Group Mention Not Allowed*\n@${senderNumber}, Your group mention message was removed. Please avoid using group mentions.`;
+      }
+      
+      // Send warning/kick message
+      await conn.sendMessage(from, {
+        text: warningMessage,
+        mentions: [sender]
+      });
+      
+      // Kick if needed
+      if (shouldKick && warning_db) {
+        await conn.groupParticipantsUpdate(from, [sender], "remove");
+        await warning_db.resetWarnings(from, sender);
+      }
+    }
+    
+    console.log(`✅ Anti-group mention triggered in ${groupName} by ${senderNumber}`);
