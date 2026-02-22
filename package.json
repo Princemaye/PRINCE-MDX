@@ -26,6 +26,7 @@
     "@vitalets/google-translate-api": "^9.2.0",
     "acrcloud": "*",
     "adm-zip": "*",
+    "tinyurl": "^1.1.7",
     "axios": "^1.2.5",
     "better-sqlite3": "^12.6.2",
     "body-parser": "latest",
