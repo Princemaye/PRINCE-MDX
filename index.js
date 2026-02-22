@@ -112,7 +112,7 @@ app.listen(PORT, "0.0.0.0", () => console.log(`Server Running on Port: ${PORT}`)
 
 const sessionDir = path.join(__dirname, "mayel", "session");
 
-loadSession();
+const sessionLoaded = loadSession();
 
 let store; 
 let reconnectAttempts = 0;
@@ -1049,6 +1049,10 @@ async function reconnectWithRetry() {
 }
 
 setTimeout(() => {
+    if (!config.SESSION_ID) {
+        console.log("⚠️ Bot not started: SESSION_ID is not configured. Set SESSION_ID environment variable to connect to WhatsApp.");
+        return;
+    }
     startPrince().catch(err => {
         console.error("Initialization error:", err);
         reconnectWithRetry();
