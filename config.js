@@ -12,7 +12,7 @@ module.exports = {
     CAPTION : process.env.CAPTION || '©𝟐𝟎𝟐𝟒 𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗 𝐕𝟓',
     VERSION: process.env.VERSION || '5.0.0',
     BOT_PIC : process.env.BOT_PIC || 'https://raw.githubusercontent.com/Mayelprince/url/main/menun.jpg',            
-    MODE: process.env.MODE || "private",
+    MODE: process.env.MODE || "public",
     PM_PERMIT: process.env.PM_PERMIT || 'false',
     WARN_COUNT : process.env.WARN_COUNT || '3',
     TIME_ZONE: process.env.TIME_ZONE || "Africa/Douala",
