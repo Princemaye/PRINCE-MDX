@@ -405,15 +405,12 @@ gmd({
       remoteJid: from,
       fromMe: quoted.fromMe,
       id: quoted.id,
-      participant: quoted.sender || (quoted.key && quoted.key.participant) || from,
+      participant: quoted.sender || (quoted.key && quoted.key.participant) || (from.endsWith('@g.us') ? quoted.key.participant : undefined)
     };
 
-    // If it's a group, we might need to use the participant from the key if quoted.sender is missing
-    if (from.endsWith('@g.us')) {
-        // Ensure participant is present for group message deletion
-        if (!key.participant || key.participant === from) {
-            key.participant = (quoted.key && quoted.key.participant) || quoted.sender;
-        }
+    // If it's a group and we're trying to delete someone else's message, we MUST have participant
+    if (from.endsWith('@g.us') && !quoted.fromMe && !key.participant) {
+        key.participant = quoted.key.participant || quoted.sender;
     }
 
     await Prince.sendMessage(from, { delete: key });
@@ -423,7 +420,6 @@ gmd({
     console.log("Delete error message:", e.message);
     await react("❌");
     
-    // If it's a permission error, let the user know
     if (e.message.includes('not-authorized') || e.status === 403) {
       return reply("❌ *Error:* I need to be an admin to delete other people's messages in groups.");
     }
