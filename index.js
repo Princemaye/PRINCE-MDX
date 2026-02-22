@@ -1023,6 +1023,40 @@ async function startPrince() {
                     }
                 }
             }
+
+            // ============ REPLY HANDLERS ============
+            if (
+                isGroup &&
+                repliedMessage &&
+                repliedMessageAuthor === botId &&
+                body &&
+                !isNaN(body)
+            ) {
+                const quotedText = repliedMessage.conversation || repliedMessage.extendedTextMessage?.text || "";
+
+                // Status Mention Reply Handler
+                if (quotedText.includes("𝐒𝐓𝐀𝐓𝐔𝐒 𝐌𝐄𝐍𝐓𝐈𝐎𝐍 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒")) {
+                    if (!isAdmin && !isSuperAdmin) return;
+                    const choice = parseInt(body.trim());
+                    let action = "";
+                    if (choice === 1) action = "warn";
+                    else if (choice === 2) action = "delete";
+                    else if (choice === 3) action = "kick";
+                    else if (choice === 4) action = "off";
+
+                    if (action) {
+                        const gMeta = await Prince.groupMetadata(from);
+                        const memberCount = gMeta.participants.length;
+                        if (action === "off") {
+                            setGroupSetting(from, "STATUS_MENTION", "false");
+                            await Prince.sendMessage(from, { text: `✅ *Anti-Group Mention* is now *DISABLED* in this group.\n👥 *Members:* ${memberCount}` }, { quoted: ms });
+                        } else {
+                            setGroupSetting(from, "STATUS_MENTION", action);
+                            await Prince.sendMessage(from, { text: `✅ *Anti-Group Mention* is now *ENABLED* with action: *${action.toUpperCase()}*\n👥 *Members:* ${memberCount}` }, { quoted: ms });
+                        }
+                    }
+                }
+            }
         });
 
         Prince.ev.on("connection.update", async (update) => {
