@@ -642,8 +642,8 @@ async function startPrince() {
             if (autoRead === "commands" && isCommand) await Prince.readMessages([ms.key]);
 
             // ============ ANTI-GROUP MENTION SYSTEM ============
-            const antiGroupMention = getSetting('ANTI_GROUP_MENTION', config.ANTI_GROUP_MENTION || '');
-            const antiMentionAction = getSetting('ANTI_GROUP_MENTION_ACTION', config.ANTI_GROUP_MENTION_ACTION || 'warn').toLowerCase();
+            const antiGroupMention = getSetting('MENTION', config.MENTION || '');
+            const antiMentionAction = getSetting('MENTION_MODE', config.MENTION_MODE || 'warn').toLowerCase();
             
             if (
                 isGroup &&
