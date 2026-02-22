@@ -489,7 +489,6 @@ gmd(
 );
 
 // Status Mention Command with Interactive Menu
-// Status Mention Command with Interactive Menu
 gmd(
   {
     pattern: "statusmention",
