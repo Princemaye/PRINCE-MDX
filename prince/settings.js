@@ -675,7 +675,7 @@ gmd(
     description: "Enable/disable welcome message for this group",
   },
   async (from, Prince, conText) => {
-    const { q, reply, react, isAdmin, isSuperAdmin, isGroup, groupName, quotedMsg } = conText;
+    const { q, reply, react, isAdmin, isSuperAdmin, isGroup, groupName, quotedMsg, botPic, sender, newsletterJid, botName, getContextInfo, mek } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isAdmin && !isSuperAdmin) return reply("❌ Admin Only Command!");
 
@@ -761,7 +761,7 @@ gmd(
     description: "Enable/disable goodbye message for this group",
   },
   async (from, Prince, conText) => {
-    const { q, reply, react, isAdmin, isSuperAdmin, isGroup, groupName, quotedMsg } = conText;
+    const { q, reply, react, isAdmin, isSuperAdmin, isGroup, groupName, quotedMsg, botPic, sender, newsletterJid, botName, getContextInfo, mek } = conText;
     if (!isGroup) return reply("❌ This command only works in groups!");
     if (!isAdmin && !isSuperAdmin) return reply("❌ Admin Only Command!");
 

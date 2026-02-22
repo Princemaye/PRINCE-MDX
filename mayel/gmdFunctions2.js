@@ -161,7 +161,9 @@ const PrinceAntiDelete = async (Prince, deletedMsg, key, deleter, sender, botOwn
         } else {
             text += `_Sent a ${msgType.replace('Message', '')}_`;
             await Prince.sendMessage(botOwnerJid, { text, mentions: [sender], contextInfo });
-            await Prince.copyNForward(botOwnerJid, deletedMsg, false, { contextInfo });
+            
+            // Fixed: Use sendMessage with forward instead of non-existent copyNForward
+            await Prince.sendMessage(botOwnerJid, { forward: deletedMsg }, { contextInfo });
         }
     } catch (e) {
         console.error('Anti-delete forwarding error:', e);
