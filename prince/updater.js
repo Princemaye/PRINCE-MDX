@@ -128,7 +128,7 @@ gmd(
       await reply("✅ Update Complete! Bot is Restarting...");
 
    setTimeout(() => {
-  require("child_process").exec("npm restart");
+  process.exit(1);
 }, 2000);
 
     } catch (error) {
