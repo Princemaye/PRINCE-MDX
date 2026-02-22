@@ -108,7 +108,7 @@ logger.level = "silent";
 
 app.use(express.static("mayel"));
 app.get("/", (req, res) => res.sendFile(__dirname + "/mayel/prince.html"));
-app.listen(PORT, () => console.log(`Server Running on Port: ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`Server Running on Port: ${PORT}`));
 
 const sessionDir = path.join(__dirname, "mayel", "session");
 

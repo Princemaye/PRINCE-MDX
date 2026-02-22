@@ -318,7 +318,8 @@ async function loadSession() {
         }
 
         if (!config.SESSION_ID || typeof config.SESSION_ID !== 'string') {
-            throw new Error("❌ SESSION_ID is missing or invalid");
+            console.log("❌ Session Error: ❌ SESSION_ID is missing or invalid. Bot will not connect until SESSION_ID is set.");
+            return;
         }
 
         const id = config.SESSION_ID;
