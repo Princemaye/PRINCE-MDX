@@ -390,6 +390,34 @@ _Or use directly:_
 });
 
 gmd({
+  pattern: "delete",
+  aliases: ["del"],
+  category: "owner",
+  react: "🗑️",
+  description: "Delete a message (reply to the message)",
+}, async (from, Prince, conText) => {
+  const { isSuperUser, quoted, reply, react } = conText;
+  try {
+    if (!isSuperUser) return reply("❌ Owner Only Command!");
+    if (!quoted) return reply("*Reply to a message to delete it.*");
+
+    const key = {
+      remoteJid: from,
+      fromMe: quoted.fromMe,
+      id: quoted.id,
+      participant: quoted.sender,
+    };
+
+    await Prince.sendMessage(from, { delete: key });
+    await react("✅");
+  } catch (e) {
+    console.log("Delete error:", e.message);
+    await react("❌");
+    reply("*Failed to delete message.*");
+  }
+});
+
+gmd({
   pattern: "antilink",
   aliases: ["setantilink"],
   category: "owner",
