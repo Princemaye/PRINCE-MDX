@@ -1983,36 +1983,3 @@ gmd(
     return reply(`✅ Anti-Promote is now ${action === "on" ? "ON" : "OFF"} for this group.`);
   },
 );
-
-gmd(
-  {
-    pattern: "antidemote",
-    react: "🛡️",
-    category: "group",
-    description: "Toggle anti-demote protection. Demotes demoter and re-promotes demoted user.",
-  },
-  async (from, Prince, conText) => {
-    const { reply, react, isGroup, isBotAdmin, isAdmin, isSuperAdmin, args } = conText;
-
-    if (!isGroup) return reply("❌ This command only works in groups!");
-    if (!isBotAdmin) return reply("❌ Bot is not an admin in this group!");
-    if (!isAdmin && !isSuperAdmin) return reply("❌ You must be an admin to use this command!");
-
-    const action = args[0]?.toLowerCase();
-    const rawCurrent = await getGroupSetting(from, "ANTIDEMOTE");
-    const current = rawCurrent === "true" ? "true" : "false";
-    
-    if (!action || !["on", "off"].includes(action)) {
-      return reply(`🛡️ *Anti-Demote Protection*\n\nCurrent: ${current === "true" ? "ON ✅" : "OFF ❌"}\n\n*Usage:*\n.antidemote on - Enable\n.antidemote off - Disable\n\n_When enabled, if someone demotes an admin, the demoter gets demoted and the demoted user is re-promoted._`);
-    }
-
-    const value = action === "on" ? "true" : "false";
-    if (current === value) {
-      return reply(`⚠️ Anti-Demote is already ${action === "on" ? "ON" : "OFF"}!`);
-    }
-    
-    await setGroupSetting(from, "ANTIDEMOTE", value);
-    await react("✅");
-    return reply(`✅ Anti-Demote is now ${action === "on" ? "ON" : "OFF"} for this group.`);
-  },
-);
