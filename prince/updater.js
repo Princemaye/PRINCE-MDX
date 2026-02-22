@@ -1,106 +1,121 @@
-const { gmd, config, getSetting, setSetting } = require("../mayel");
+const cmd = require("../command");
+const config = require("../config");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
 
 function copyFolderSync(source, destination, excludeList = []) {
-  if (!fs.existsSync(destination)) fs.mkdirSync(destination, { recursive: true });
-  const items = fs.readdirSync(source);
-  for (const item of items) {
-    const srcPath = path.join(source, item);
-    const destPath = path.join(destination, item);
-    const relativePath = path.relative(source, srcPath);
-    if (excludeList.some(ex => relativePath === ex || relativePath.startsWith(ex + path.sep))) continue;
-    const stat = fs.statSync(srcPath);
-    if (stat.isDirectory()) {
-      copyFolderSync(srcPath, destPath, excludeList.map(ex => {
-        if (ex.startsWith(item + '/') || ex.startsWith(item + path.sep)) return ex.slice(item.length + 1);
-        return ex;
-      }));
-    } else {
-      fs.copyFileSync(srcPath, destPath);
+    if (!fs.existsSync(destination)) {
+        fs.mkdirSync(destination, { recursive: true });
     }
-  }
+
+    const items = fs.readdirSync(source);
+
+    for (const item of items) {
+        const srcPath = path.join(source, item);
+        const destPath = path.join(destination, item);
+        const relativePath = path.relative(source, srcPath);
+
+        if (excludeList.some(ex => 
+            relativePath === ex || 
+            relativePath.startsWith(ex + path.sep)
+        )) continue;
+
+        const stat = fs.statSync(srcPath);
+
+        if (stat.isDirectory()) {
+            copyFolderSync(srcPath, destPath, excludeList);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+    }
 }
 
-gmd(
-  {
+cmd({
     pattern: "update",
-    aliases: ["updatenow", "updt", "sync"],
-    react: "🆕",
-    description: "Update the bot to the latest version",
+    desc: "Update bot to latest version",
     category: "owner",
-  },
-  async (from, Prince, conText) => {
-    const { q, mek, react, reply, isSuperUser, princeRepo } = conText;
+    react: "🆕",
+    filename: __filename
+},
+async (conn, mek, m, { reply, isOwner }) => {
 
-    if (!isSuperUser) {
-      await react("❌");
-      return reply("❌ Owner Only Command!");
+    if (!isOwner) {
+        return reply("❌ Owner Only Command");
     }
 
     try {
-      await reply("🔍 Checking for New Updates...");
+        await reply("🔍 Checking for Updates...");
 
-      const repoName = princeRepo || config.BOT_REPO;
-      const { data: commitData } = await axios.get(
-        `https://api.github.com/repos/${repoName}/commits/main`
-      );
-      const latestCommitHash = commitData.sha;
-      const currentHash = getSetting("COMMIT_HASH", "");
+        const repo = "Princemaye/PRINCE-MDX";
+        const branch = "main";
 
-      if (latestCommitHash === currentHash) {
-        return reply("✅ Your Bot is Already on the Latest Version!");
-      }
+        // Get latest commit
+        const { data } = await axios.get(
+            `https://api.github.com/repos/${repo}/commits/${branch}`
+        );
 
-      const authorName = commitData.commit.author.name;
-      const authorEmail = commitData.commit.author.email;
-      const commitDate = new Date(commitData.commit.author.date).toLocaleString();
-      const commitMessage = commitData.commit.message;
+        const latestCommit = data.sha;
+        const commitMsg = data.commit.message;
+        const author = data.commit.author.name;
+        const date = new Date(data.commit.author.date).toLocaleString();
 
-      await reply(
-        `🔄 Updating Bot...\n\n*Commit Details:*\n👤 Author: ${authorName} (${authorEmail})\n📅 Date: ${commitDate}\n💬 Message: ${commitMessage}`
-      );
+        await reply(
+`🔄 Updating Bot...
 
-      const repoParts = repoName.split("/");
-      const repoShort = repoParts[1] || repoName;
-      const branch = "main";
+👤 Author: ${author}
+📅 Date: ${date}
+💬 Message: ${commitMsg}
 
-      const zipPath = path.join(__dirname, "..", `${repoShort}-${branch}.zip`);
-      const { data: zipData } = await axios.get(
-        `https://github.com/${repoName}/archive/${branch}.zip`,
-        { responseType: "arraybuffer" }
-      );
-      fs.writeFileSync(zipPath, zipData);
+Downloading update...`
+        );
 
-      const extractPath = path.join(__dirname, "..", "latest");
-      const zip = new AdmZip(zipPath);
-      zip.extractAllTo(extractPath, true);
+        // Download ZIP
+        const zipUrl = `https://github.com/${repo}/archive/${branch}.zip`;
+        const zipPath = path.join(__dirname, "../update.zip");
 
-      const sourcePath = path.join(extractPath, `${repoShort}-${branch}`);
-      const destinationPath = path.join(__dirname, "..");
+        const response = await axios.get(zipUrl, {
+            responseType: "arraybuffer"
+        });
 
-      const excludeList = [
+        fs.writeFileSync(zipPath, response.data);
+
+        // Extract ZIP
+        const extractPath = path.join(__dirname, "../latest");
+        const zip = new AdmZip(zipPath);
+        zip.extractAllTo(extractPath, true);
+
+        const sourcePath = path.join(
+            extractPath,
+            `PRINCE-MDX-${branch}`
+        );
+
+        const destinationPath = path.join(__dirname, "..");
+
+        // Files to keep safe
+        const excludeList = [
         ".env",
         "mayel/prince.db",
         "mayel/session",
       ];
 
-      copyFolderSync(sourcePath, destinationPath, excludeList);
-      setSetting("COMMIT_HASH", latestCommitHash);
 
-      try { fs.unlinkSync(zipPath); } catch {}
-      try { fs.rmSync(extractPath, { recursive: true, force: true }); } catch {}
+        copyFolderSync(sourcePath, destinationPath, excludeList);
 
-      await reply("✅ Update Complete! Bot is Restarting...");
+        // Cleanup
+        fs.unlinkSync(zipPath);
+        fs.rmSync(extractPath, { recursive: true, force: true });
 
-      setTimeout(() => {
-        process.exit(0);
-      }, 2000);
-    } catch (error) {
-      console.error("Update error:", error);
-      return reply("❌ Update Failed. Please try by Redeploying Manually.");
+        await reply("✅ Update Complete!\nRestarting...");
+
+        setTimeout(() => {
+            process.exit(0);
+        }, 2000);
+
+    } catch (err) {
+        console.log(err);
+        reply("❌ Update Failed. Try manual redeploy.");
     }
-  }
-);
+
+});
