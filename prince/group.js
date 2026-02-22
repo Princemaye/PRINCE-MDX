@@ -496,22 +496,37 @@ gmd(
     desc: "Enable/disable anti-group mention and set action (on/off/warn/kick/delete)",
   },
   async (from, Prince, conText) => {
-    const { reply, isAdmin, isSuperUser, args } = conText;
+    const {
+      reply,
+      isAdmin,
+      isSuperUser,
+      args,
+      groupMetadata,
+      groupName,
+      sender,
+      newsletterJid,
+      botName,
+      botPic,
+      getContextInfo,
+    } = conText;
 
     if (!isAdmin && !isSuperUser) return reply("❌ Admin Only Command!");
 
     const status = (args[0] || "").toLowerCase();
-    const gMeta = conText.groupMetadata || await Prince.groupMetadata(from);
+    const gMeta = groupMetadata || (await Prince.groupMetadata(from));
     const memberCount = gMeta.participants.length;
-    const groupName = gMeta.subject;
+    const gName = groupName || gMeta.subject;
 
     if (!status) {
       const currentSetting = getGroupSetting(from, "STATUS_MENTION", "false");
-      const statusText = currentSetting === "false" ? "❌ Off" : `✅ ${currentSetting.toUpperCase()}`;
-      
+      const statusText =
+        currentSetting === "false"
+          ? "❌ Off"
+          : `✅ ${currentSetting.toUpperCase()}`;
+
       const menuText = `*𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗 𝐒𝐓𝐀𝐓𝐔𝐒 𝐌𝐄𝐍𝐓𝐈𝐎𝐍 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒*
 
-📍 Group: *${groupName}*
+📍 Group: *${gName}*
 📊 Current status: *${statusText}*
 
 Reply With:
@@ -528,7 +543,15 @@ _Or use directly:_
 │ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘɪɴᴄᴇ ᴛᴇᴄʜ  
 ╰─────────────────◆`;
 
-      return reply(menuText);
+      return Prince.sendMessage(
+        from,
+        {
+          image: { url: botPic },
+          caption: menuText,
+          contextInfo: getContextInfo(sender, newsletterJid, botName),
+        },
+        { quoted: conText.mek || conText.ms },
+      );
     }
 
     if (status === "on" || status === "true" || status === "enable" || status === "warn" || status === "1") {
