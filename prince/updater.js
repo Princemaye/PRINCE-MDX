@@ -107,6 +107,7 @@ gmd(
       const excludeList = [
         ".env",
         "session",
+        "config.js",
         "mayel/prince.db",
       ];
 
