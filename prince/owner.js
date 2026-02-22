@@ -321,49 +321,72 @@ gmd({
   react: "🛡️",
   filename: __filename,
 }, async (from, Prince, conText) => {
-  const { q, reply, react, isSuperUser, getSetting, setSetting, sender, newsletterJid, botName, mek } = conText;
+  const { q, reply, react, isSuperUser, getSetting, setSetting, sender, newsletterJid, botName, mek, botPic } = conText;
   if (!isSuperUser) return reply("❌ Owner Only Command!");
+  
   const currentMode = getSetting('ANTIDELETE', config.ANTIDELETE || 'off').toLowerCase();
   const input = (q || '').trim().toLowerCase();
   const validModes = ['chat', 'group', 'all', 'off'];
+
   if (!input || !validModes.includes(input)) {
-    const modeLabels = {
-      chat: '💬 Chat — Catch deleted messages only in DMs/private chats',
-      group: '👥 Group — Catch deleted messages only in group chats',
-      all: '🌐 All — Catch deleted messages in both DMs and groups',
-      off: '🚫 Off — Antidelete disabled'
-    };
-    let statusText = `*🛡️ ANTIDELETE SETTINGS*\n\n`;
-    statusText += `*Current Mode:* ${currentMode}\n\n`;
-    statusText += `*Available Modes:*\n`;
-    for (const [mode, label] of Object.entries(modeLabels)) {
-      statusText += `${currentMode === mode ? '▸ ' : '▫ '}${label}\n`;
-    }
-    statusText += `\n*Usage:*\n`;
-    statusText += `*.antidelete chat* — DMs only\n`;
-    statusText += `*.antidelete group* — Groups only\n`;
-    statusText += `*.antidelete all* — Everywhere\n`;
-    statusText += `*.antidelete off* — Disable`;
-    return await Prince.sendMessage(from, {
-      text: statusText,
+    const statusText = `*𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗 𝐀𝐍𝐓𝐈𝐃𝐄𝐋𝐄𝐓𝐄 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒*
+
+📊 Current Mode: *${currentMode.toUpperCase()}*
+
+Reply With:
+
+*1.* Enable for Private Chats (DM)
+*2.* Enable for Group Chats
+*3.* Enable for All Chats
+*4.* Disable Antidelete
+
+_Or use directly:_
+*.antidelete chat/group/all/off*
+
+╭────────────────◆  
+│ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘɪɴᴄᴇ ᴛᴇᴄʜ  
+╰─────────────────◆`;
+
+    const sentMsg = await Prince.sendMessage(from, {
+      image: { url: botPic },
+      caption: statusText,
       contextInfo: getContextInfo(sender, newsletterJid, botName),
     }, { quoted: mek });
+
+    const handler = async (event) => {
+      const ms = event.messages[0];
+      if (!ms?.message || ms.key.fromMe) return;
+
+      const isReply = ms.message?.extendedTextMessage?.contextInfo?.stanzaId === sentMsg.key.id;
+      if (isReply) {
+        const text = (ms.message.conversation || ms.message.extendedTextMessage?.text || "").trim();
+        let mode = "";
+        if (text === "1") mode = "chat";
+        else if (text === "2") mode = "group";
+        else if (text === "3") mode = "all";
+        else if (text === "4") mode = "off";
+
+        if (mode) {
+          Prince.ev.off("messages.upsert", handler);
+          setSetting('ANTIDELETE', mode);
+          await react("✅");
+          return reply(`✅ *Antidelete set to:* ${mode.toUpperCase()}`);
+        }
+      }
+    };
+
+    Prince.ev.on("messages.upsert", handler);
+    setTimeout(() => Prince.ev.off("messages.upsert", handler), 60000);
+    return;
   }
+
   if (input === currentMode) {
     return reply(`⚠️ Antidelete is already set to *${input}*`);
   }
+
   setSetting('ANTIDELETE', input);
-  const descriptions = {
-    chat: 'Deleted messages will be forwarded to your DM (private chats only)',
-    group: 'Deleted messages will be forwarded to your DM (group chats only)',
-    all: 'Deleted messages will be forwarded to your DM (all chats)',
-    off: 'Antidelete has been disabled'
-  };
   await react("✅");
-  await Prince.sendMessage(from, {
-    text: `✅ *Antidelete set to:* ${input}\n\n${descriptions[input]}`,
-    contextInfo: getContextInfo(sender, newsletterJid, botName),
-  }, { quoted: mek });
+  await reply(`✅ *Antidelete set to:* ${input.toUpperCase()}`);
 });
 
 gmd({

@@ -291,16 +291,36 @@ async function startPrince() {
 
                     if (deleter === botJid || deleter === botOwnerJid) return;
 
-                    await PrinceAntiDelete(
-                        Prince,
-                        deletedMsg,
-                        key,
-                        deleter,
-                        deletedMsg.originalSender,
-                        botOwnerJid,
-                        deleterPushName,
-                        deletedMsg.originalPushName,
-                    );
+                    const activeAntiDelete = getSetting("ANTIDELETE", antiDelete);
+                    const isGroup = key.remoteJid.endsWith("@g.us");
+
+                    let shouldExecute = false;
+                    const mode = String(activeAntiDelete).toLowerCase();
+                    if (mode === "all") shouldExecute = true;
+                    else if (mode === "chat" && !isGroup) shouldExecute = true;
+                    else if (mode === "group" && isGroup) shouldExecute = true;
+
+                    if (shouldExecute) {
+                        const isGroup = key.remoteJid.endsWith("@g.us");
+                        let groupName = "";
+                        if (isGroup) {
+                            try {
+                                const metadata = await Prince.groupMetadata(key.remoteJid);
+                                groupName = metadata.subject;
+                            } catch (e) {}
+                        }
+                        
+                        await PrinceAntiDelete(
+                            Prince,
+                            { ...deletedMsg, groupName },
+                            key,
+                            deleter,
+                            deletedMsg.originalSender,
+                            botOwnerJid,
+                            deleterPushName,
+                            deletedMsg.originalPushName,
+                        );
+                    }
 
                     Mayel.chats[key.remoteJid] = Mayel.chats[
                         key.remoteJid

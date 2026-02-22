@@ -135,8 +135,37 @@ const PrinceAnticall = async (json, Prince) => {
     }
 };
 
-const PrinceAntiDelete = async (Prince, deletedMsg, key, deleter, sender) => {
-    // Implementation
+const PrinceAntiDelete = async (Prince, deletedMsg, key, deleter, sender, botOwnerJid, deleterPushName, senderPushName) => {
+    try {
+        const from = key.remoteJid;
+        const isGroup = from.endsWith('@g.us');
+        const msgType = getContentType(deletedMsg.message);
+        
+        let text = `*🛡️ PRINCE MDX ANTIDELETE*\n\n`;
+        text += `*From:* @${sender.split('@')[0]}\n`;
+        text += `*Chat:* ${isGroup ? 'Group' : 'Private'}\n`;
+        if (isGroup) text += `*Group Name:* ${deletedMsg.groupName || 'Unknown'}\n`;
+        text += `*Time:* ${new Date(deletedMsg.timestamp).toLocaleString()}\n\n`;
+        text += `*Message Content:* \n`;
+
+        const contextInfo = {
+            mentionedJid: [sender],
+            forwardingScore: 999,
+            isForwarded: true
+        };
+
+        if (msgType === 'conversation' || msgType === 'extendedTextMessage') {
+            const body = deletedMsg.message.conversation || deletedMsg.message.extendedTextMessage?.text;
+            text += `_${body}_`;
+            await Prince.sendMessage(botOwnerJid, { text, mentions: [sender], contextInfo });
+        } else {
+            text += `_Sent a ${msgType.replace('Message', '')}_`;
+            await Prince.sendMessage(botOwnerJid, { text, mentions: [sender], contextInfo });
+            await Prince.copyNForward(botOwnerJid, deletedMsg, false, { contextInfo });
+        }
+    } catch (e) {
+        console.error('Anti-delete forwarding error:', e);
+    }
 };
 
 module.exports = {
