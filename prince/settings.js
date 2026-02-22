@@ -623,7 +623,6 @@ gmd(
 
       const welcomeStatus = isSettingEnabled(settings.WELCOME_MESSAGE) ? "ON" : "OFF";
       const goodbyeStatus = isSettingEnabled(settings.GOODBYE_MESSAGE) ? "ON" : "OFF";
-      const eventsStatus = isSettingEnabled(settings.GROUP_EVENTS) ? "ON" : "OFF";
       const antilinkStatus = isSettingEnabled(settings.ANTILINK) ? "ON" : "OFF";
       const mentionStatus = isSettingEnabled(settings.STATUS_MENTION) ? "ON" : "OFF";
 
@@ -640,7 +639,6 @@ gmd(
       msg += `│\n`;
       msg += `│ 👋 *Welcome:* ${welcomeStatus}\n`;
       msg += `│ 👋 *Goodbye:* ${goodbyeStatus}\n`;
-      msg += `│ 📢 *Events:* ${eventsStatus}\n`;
       msg += `│\n`;
       msg += `├━━━━━━━━━━━┤\n`;
       msg += `│ 🛡️ *PROTECTION*\n`;
