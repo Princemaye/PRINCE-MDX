@@ -74,7 +74,7 @@ gmd(
 
       await reply(
         `🔄 Updating Bot...\n\n` +
-        `👤 Author: ${authorName} (${authorEmail})\n` +
+        `👤 Author: ${authorName} \n` +
         `📅 Date: ${commitDate}\n` +
         `💬 Message: ${commitMessage}`
       );
