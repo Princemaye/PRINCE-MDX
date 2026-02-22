@@ -642,12 +642,12 @@ async function startPrince() {
             if (autoRead === "commands" && isCommand) await Prince.readMessages([ms.key]);
 
             // ============ ANTI-GROUP MENTION SYSTEM ============
-            const antiGroupMention = getSetting('MENTION', config.MENTION || '');
+            const antiMentionStatus = getGroupSetting(from, 'MENTION', 'false');
             const antiMentionAction = getSetting('MENTION_MODE', config.MENTION_MODE || 'warn').toLowerCase();
             
             if (
                 isGroup &&
-                antiGroupMention.includes(from) &&
+                antiMentionStatus === 'true' &&
                 !ms.key.fromMe &&
                 !isAdmin &&
                 type === 'groupStatusMentionMessage'

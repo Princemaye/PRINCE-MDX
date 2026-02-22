@@ -37,7 +37,6 @@ module.exports = {
     AUTO_READ_MESSAGES : process.env.AUTO_READ_MESSAGES || 'false',
     ANTI_BIO : process.env.AUTO_BIO || 'false',
     AUTO_BLOCK: process.env.AUTO_BLOCK || '212,233',
-    MENTION: process.env.MENTION || '',
     MENTION_MODE: process.env.MENTION_MODE || 'warn',
     YT: process.env.YT || 'youtube.com/@princetechn11',
     NEWSLETTER_JID: process.env.NEWSLETTER_JID || '120363404978384902@newsletter',
