@@ -500,7 +500,7 @@ gmd(
 
     if (!isAdmin && !isSuperUser) return reply("❌ Admin Only Command!");
 
-    const status = args[0]?.toLowerCase();
+    const status = (args[0] || "").toLowerCase();
     if (status === "on" || status === "true" || status === "enable" || status === "warn") {
       setGroupSetting(from, "STATUS_MENTION", "warn");
       return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*");
