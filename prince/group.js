@@ -488,6 +488,8 @@ gmd(
   },
 );
 
+// Status Mention Command with Interactive Menu
+// Status Mention Command with Interactive Menu
 gmd(
   {
     pattern: "statusmention",
@@ -1643,7 +1645,7 @@ gmd(
   {
     pattern: "everyone",
     react: "📢",
-    aliases: ["everyone", "tag", "tagall1", "mention"],
+    aliases: ["everyone", "tag", "tagall1"],
     category: "group",
     description: "Tag everyone in the group with custom message",
   },
@@ -1789,135 +1791,21 @@ gmd(
   },
 );
 
+// Duplicate antigroupmention command removed in favor of .statusmention
+/*
 gmd(
   {
     pattern: "antigroupmention",
-    aliases: [
-      "antigcmention",
-      "antimentiongroup",
-      "antigcstatusmention",
-      "antistatusmention",
-    ],
-    react: "🛡️",
-    category: "group",
-    description:
-      "Toggle anti-group-mention protection. Modes: on/warn (default), kick, off",
-  },
-  async (from, Prince, conText) => {
-    const {
-      reply,
-      react,
-      isGroup,
-      isBotAdmin,
-      isAdmin,
-      isSuperAdmin,
-      q,
-      mek,
-      botName,
-    } = conText;
+...
+*/
 
-    if (!isGroup) return reply("❌ This command only works in groups!");
-    if (!isBotAdmin) return reply("❌ Bot is not an admin in this group!");
-    if (!isAdmin && !isSuperAdmin)
-      return reply("❌ You must be an admin to use this command!");
-
-    try {
-      const currentSetting = await getGroupSetting(from, "ANTIGROUPMENTION");
-      const arg = q?.toLowerCase()?.trim();
-
-      if (!arg) {
-        const status =
-          currentSetting === "false" || currentSetting === "off"
-            ? "OFF"
-            : `ON (${currentSetting})`;
-        return reply(
-          `🛡️ *Anti-Group-Mention Status*\n\nCurrent: *${status}*\n\n*Usage:*\n• .antigroupmention on - Enable with warnings\n• .antigroupmention warn - Enable with warnings\n• .antigroupmention delete - Delete message only\n• .antigroupmention kick - Kick immediately\n• .antigroupmention off - Disable`,
-        );
-      }
-
-      let newValue;
-      let message;
-
-      if (arg === "on" || arg === "true" || arg === "warn") {
-        newValue = "warn";
-        message = `✅ Anti-Group-Mention *ENABLED* with warnings!\n\nUsers who mention this group in their status will be warned and kicked after reaching the warn limit.`;
-      } else if (arg === "delete") {
-        newValue = "delete";
-        message = `✅ Anti-Group-Mention *ENABLED* with delete!\n\nMessages mentioning this group in status will be deleted with a warning. No kick action.`;
-      } else if (arg === "kick") {
-        newValue = "kick";
-        message = `✅ Anti-Group-Mention *ENABLED* with immediate kick!\n\nUsers who mention this group in their status will be kicked immediately.`;
-      } else if (arg === "off" || arg === "false") {
-        newValue = "false";
-        message = `❌ Anti-Group-Mention *DISABLED*!`;
-      } else {
-        return reply(`❌ Invalid option. Use: on, warn, delete, kick, or off`);
-      }
-
-      await setGroupSetting(from, "ANTIGROUPMENTION", newValue);
-      await react("✅");
-      return reply(message);
-    } catch (error) {
-      await react("❌");
-      return reply(`❌ Failed to update setting: ${error.message}`);
-    }
-  },
-);
-
+// Duplicate setantigcmentionwarnlimit removed
+/*
 gmd(
   {
     pattern: "setantigcmentionwarnlimit",
-    aliases: [
-      "antigcmentionwarnlimit",
-      "setantigroupmentionwarn",
-      "antigroupmentionwarnlimit",
-      "antigcwarnlimit2",
-    ],
-    react: "⚙️",
-    category: "group",
-    description: "Set the warning limit for anti-group-mention before kicking",
-  },
-  async (from, Prince, conText) => {
-    const { reply, react, isGroup, isBotAdmin, isAdmin, isSuperAdmin, q, mek } =
-      conText;
-
-    if (!isGroup) return reply("❌ This command only works in groups!");
-    if (!isBotAdmin) return reply("❌ Bot is not an admin in this group!");
-    if (!isAdmin && !isSuperAdmin)
-      return reply("❌ You must be an admin to use this command!");
-
-    try {
-      const currentLimit = await getGroupSetting(
-        from,
-        "ANTIGROUPMENTION_WARN_COUNT",
-      );
-
-      if (!q || !q.trim()) {
-        return reply(
-          `⚙️ *Anti-Group-Mention Warn Limit*\n\nCurrent: *${currentLimit || 3}* warnings\n\n*Usage:* .setantigcmentionwarnlimit <number>\n*Example:* .setantigcmentionwarnlimit 5`,
-        );
-      }
-
-      const newLimit = parseInt(q.trim());
-      if (isNaN(newLimit) || newLimit < 1 || newLimit > 50) {
-        return reply(`❌ Please provide a valid number between 1 and 50`);
-      }
-
-      await setGroupSetting(
-        from,
-        "ANTIGROUPMENTION_WARN_COUNT",
-        String(newLimit),
-      );
-      await react("✅");
-      return reply(
-        `✅ Anti-Group-Mention warn limit set to *${newLimit}*!\n\nUsers will be kicked after ${newLimit} warnings.`,
-      );
-    } catch (error) {
-      await react("❌");
-      return reply(`❌ Failed to update warn limit: ${error.message}`);
-    }
-  },
-);
+...
+*/
 
 gmd(
   {
