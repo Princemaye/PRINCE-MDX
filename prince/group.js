@@ -501,18 +501,21 @@ gmd(
     if (!isAdmin && !isSuperUser) return reply("❌ Admin Only Command!");
 
     const status = (args[0] || "").toLowerCase();
+    const gMeta = await Prince.groupMetadata(from);
+    const memberCount = gMeta.participants.length;
+
     if (status === "on" || status === "true" || status === "enable" || status === "warn") {
       setGroupSetting(from, "STATUS_MENTION", "warn");
-      return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*");
+      return reply(`✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*\n👥 *Members:* ${memberCount}`);
     } else if (status === "kick") {
       setGroupSetting(from, "STATUS_MENTION", "kick");
-      return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *KICK*");
+      return reply(`✅ *Anti-Group Mention* is now *ENABLED* with action: *KICK*\n👥 *Members:* ${memberCount}`);
     } else if (status === "delete") {
       setGroupSetting(from, "STATUS_MENTION", "delete");
-      return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *DELETE*");
+      return reply(`✅ *Anti-Group Mention* is now *ENABLED* with action: *DELETE*\n👥 *Members:* ${memberCount}`);
     } else if (status === "off" || status === "false" || status === "disable") {
       setGroupSetting(from, "STATUS_MENTION", "false");
-      return reply("✅ *Anti-Group Mention* is now *DISABLED* in this group.");
+      return reply(`✅ *Anti-Group Mention* is now *DISABLED* in this group.\n👥 *Members:* ${memberCount}`);
     } else {
       return reply(`*Usage:* .statusmention on/off/warn/kick/delete`);
     }

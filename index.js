@@ -664,14 +664,18 @@ async function startPrince() {
                         const antiMentionAction = antiMentionSetting === 'true' ? 'warn' : antiMentionSetting;
                         
                         // STEP 2: APPLY THE SELECTED ACTION
+                        const gMeta = await Prince.groupMetadata(from);
+                        const memberCount = gMeta.participants.length;
+                        const groupName = gMeta.subject;
+
                         if (antiMentionAction === 'delete') {
                             await Prince.sendMessage(from, {
-                                text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Your group mention message was removed.`,
+                                text: `🚫 *Anti-Group Mention Activated!*\n\n👥 *Group:* ${groupName}\n👥 *Members:* ${memberCount}\n👤 *User:* @${senderNumber}\n📝 *Action:* Message Removed`,
                                 mentions: [sender]
                             }, { quoted: ms });
                         } else if (antiMentionAction === 'kick') {
                             await Prince.sendMessage(from, {
-                                text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Group mentions are not allowed. You have been removed from the group.`,
+                                text: `🚫 *Anti-Group Mention Activated!*\n\n👥 *Group:* ${groupName}\n👥 *Members:* ${memberCount}\n👤 *User:* @${senderNumber}\n📝 *Action:* Kicked from Group`,
                                 mentions: [sender]
                             }, { quoted: ms });
                             await Prince.groupParticipantsUpdate(from, [sender], "remove");
@@ -682,16 +686,13 @@ async function startPrince() {
                             let warningMessage = '';
                             let shouldKick = false;
                             
+                            const baseText = `🚫 *Anti-Group Mention Activated!*\n\n👥 *Group:* ${groupName}\n👥 *Members:* ${memberCount}\n👤 *User:* @${senderNumber}\n`;
+
                             if (newWarningCount >= 3) {
                                 shouldKick = true;
-                                warningMessage = `🚫 *Final Warning Exceeded!*\n@${senderNumber}, You have received 3 warnings for group mentions and have been removed from the group.`;
+                                warningMessage = `${baseText}⚠️ *Action:* Final Warning Exceeded! (Removed)`;
                             } else {
-                                const warningMessages = [
-                                    `⚠️ *Warning 1/3*\n@${senderNumber}, Group mentions are not allowed. Your message was removed.`,
-                                    `⚠️ *Warning 2/3*\n@${senderNumber}, Another group mention detected. Next violation will result in removal.`,
-                                    `⚠️ *Final Warning 3/3*\n@${senderNumber}, One more group mention and you will be removed.`
-                                ];
-                                warningMessage = warningMessages[newWarningCount - 1];
+                                warningMessage = `${baseText}⚠️ *Warning:* ${newWarningCount}/3\n📝 *Note:* Next violation will result in removal.`;
                             }
                             
                             await Prince.sendMessage(from, {
