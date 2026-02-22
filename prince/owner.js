@@ -405,15 +405,15 @@ gmd({
       remoteJid: from,
       fromMe: quoted.fromMe,
       id: quoted.id,
-      participant: quoted.sender,
+      participant: quoted.sender || quoted.key.participant || from,
     };
 
     await Prince.sendMessage(from, { delete: key });
     await react("✅");
   } catch (e) {
-    console.log("Delete error:", e.message);
+    console.log("Delete error:", e);
     await react("❌");
-    reply("*Failed to delete message.*");
+    reply(`*Failed to delete message: ${e.message}*`);
   }
 });
 
