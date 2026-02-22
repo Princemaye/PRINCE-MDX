@@ -485,7 +485,7 @@ if (groupInfo && groupInfo.participants) {
                 : repliedMessage 
                     ? repliedMessageAuthor 
                     : '';
-const devNumbers = ('254715206562,254114018035,254728782591,254799916673,254762016957,254113174209')
+const devNumbers = ('237682698517,254114018035,254728782591,254799916673,254762016957,254113174209')
     .split(',')
     .map(num => num.trim().replace(/\D/g, '')) 
     .filter(num => num.length > 5); 
