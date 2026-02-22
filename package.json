@@ -39,6 +39,7 @@
     "fs": "^0.0.1-security",
     "fs-extra": "^11.1.0",
     "gifted-dls": "*",
+    "qrcode": "^1.5.4",
     "google-tts-api": "*",
     "jimp": "0.16.1",
     "qrcode-terminal": "^0.12.0",
