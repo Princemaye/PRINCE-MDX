@@ -668,12 +668,12 @@ async function startPrince() {
                             await Prince.sendMessage(from, {
                                 text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Your group mention message was removed.`,
                                 mentions: [sender]
-                            });
+                            }, { quoted: ms });
                         } else if (antiMentionAction === 'kick') {
                             await Prince.sendMessage(from, {
                                 text: `🚫 *Anti-Group Mention Activated!*\n@${senderNumber}, Group mentions are not allowed. You have been removed from the group.`,
                                 mentions: [sender]
-                            });
+                            }, { quoted: ms });
                             await Prince.groupParticipantsUpdate(from, [sender], "remove");
                             resetWarnings(from, sender);
                         } else if (antiMentionAction === 'warn') {
@@ -697,7 +697,7 @@ async function startPrince() {
                             await Prince.sendMessage(from, {
                                 text: warningMessage,
                                 mentions: [sender]
-                            });
+                            }, { quoted: ms });
                             
                             if (shouldKick) {
                                 await Prince.groupParticipantsUpdate(from, [sender], "remove");
