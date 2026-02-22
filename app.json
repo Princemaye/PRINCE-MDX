@@ -1,0 +1,40 @@
+{
+  "name": "PRINCE-MDX",
+  "description": "Prince MDX - Multi-Device WhatsApp Bot",
+  "logo": "https://raw.githubusercontent.com/Mayelprince/url/main/menun.jpg",
+  "keywords": ["whatsapp", "bot", "prince-md", "baileys", "multi-device"],
+  "repository": "https://github.com/Mayelprince/PRINCE-MDXI",
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "env": {
+    "SESSION_ID": {
+      "description": "Your WhatsApp session ID (starts with PRINCE-MDX! or PRINCE-MD~)",
+      "required": true
+    },
+    "PREFIX": {
+      "description": "Bot command prefix",
+      "value": ".",
+      "required": false
+    },
+    "OWNER_NAME": {
+      "description": "Bot owner display name",
+      "value": "𝐏𝐑𝐈𝐍𝐂𝐄 𝐓𝐄𝐂𝐇",
+      "required": false
+    },
+    "OWNER_NUMBER": {
+      "description": "Bot owner phone number (without +)",
+      "value": "237682698517",
+      "required": true
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "prince-md",
+  "version": "5.0.0",
+  "description": "Prince-Md, a Multi Device Whatsapp Bot to Enhance Whatsapp Communication Experience",
+  "main": "./index.js",
+  "type": "commonjs",
+  "engines": {
+    "npm": "10.x",
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "stop": "pm2 stop princemd",
+    "restart": "pm2 restart princemd"
+  },
+  "keywords": [
+    "prince-md",
+    "whatsapp-bot",
+    "princetech"
+  ],
+  "author": "PrinceTech",
+  "license": "MIT",
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "*",
+    "@hapi/boom": "*",
+    "@vitalets/google-translate-api": "^9.2.0",
+    "acrcloud": "*",
+    "axios": "^1.2.5",
+    "better-sqlite3": "^12.6.2",
+    "body-parser": "latest",
+    "buffer": "^6.0.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2",
+    "ffmpeg-static": "*",
+    "file-type": "17.1.6",
+    "fluent-ffmpeg": "*",
+    "form-data": "^4.0.1",
+    "fs": "^0.0.1-security",
+    "fs-extra": "^11.1.0",
+    "gifted-dls": "*",
+    "google-tts-api": "*",
+    "jimp": "0.16.1",
+    "mime-types": "^2.1.35",
+    "moment-timezone": "^0.5.45",
+    "node-fetch": "^3.3.2",
+    "path": "latest",
+    "pino": "^7.0.5",
+    "pm2": "latest",
+    "prince-baileys": "npm:gifted-baileys@latest",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.34.1",
+    "stream": "*",
+    "util": "*",
+    "wa-sticker-formatter": "*"
+  },
+  "overrides": {
+    "sharp": "^0.34.1"
+  },
+  "resolutions": {
+    "sharp": "^0.34.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mayelprincel/PRINCE-MDXI.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Mayelprince/PRINCE-MDXI/issues"
+  },
+  "homepage": "https://github.com/Mayelprince/PRINCE-MDXI#readme"
+}
