@@ -503,17 +503,44 @@ gmd(
     const status = (args[0] || "").toLowerCase();
     const gMeta = await Prince.groupMetadata(from);
     const memberCount = gMeta.participants.length;
+    const groupName = gMeta.subject;
 
-    if (status === "on" || status === "true" || status === "enable" || status === "warn") {
+    if (!status) {
+      const currentSetting = getGroupSetting(from, "STATUS_MENTION", "false");
+      const statusText = currentSetting === "false" ? "❌ Off" : `✅ ${currentSetting.toUpperCase()}`;
+      
+      const menuText = `*𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗 𝐒𝐓𝐀𝐓𝐔𝐒 𝐌𝐄𝐍𝐓𝐈𝐎𝐍 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒*
+
+📍 Group: *${groupName}*
+📊 Current status: *${statusText}*
+
+Reply With:
+
+*1.* To Enable Status Mention => Warn  
+*2.* To Enable Status Mention => Delete  
+*3.* To Enable Status Mention => Remove/Kick  
+*4.* To Disable Status Mention Feature  
+
+_Or use directly:_
+*.statusmention warn/delete/kick/off*
+
+╭────────────────◆  
+│ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘɪɴᴄᴇ ᴛᴇᴄʜ  
+╰─────────────────◆`;
+
+      return reply(menuText);
+    }
+
+    if (status === "on" || status === "true" || status === "enable" || status === "warn" || status === "1") {
       setGroupSetting(from, "STATUS_MENTION", "warn");
       return reply(`✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*\n👥 *Members:* ${memberCount}`);
-    } else if (status === "kick") {
+    } else if (status === "kick" || status === "3") {
       setGroupSetting(from, "STATUS_MENTION", "kick");
       return reply(`✅ *Anti-Group Mention* is now *ENABLED* with action: *KICK*\n👥 *Members:* ${memberCount}`);
-    } else if (status === "delete") {
+    } else if (status === "delete" || status === "2") {
       setGroupSetting(from, "STATUS_MENTION", "delete");
       return reply(`✅ *Anti-Group Mention* is now *ENABLED* with action: *DELETE*\n👥 *Members:* ${memberCount}`);
-    } else if (status === "off" || status === "false" || status === "disable") {
+    } else if (status === "off" || status === "false" || status === "disable" || status === "4") {
       setGroupSetting(from, "STATUS_MENTION", "false");
       return reply(`✅ *Anti-Group Mention* is now *DISABLED* in this group.\n👥 *Members:* ${memberCount}`);
     } else {
