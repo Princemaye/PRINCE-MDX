@@ -318,8 +318,7 @@ async function loadSession() {
         }
 
         if (!config.SESSION_ID || typeof config.SESSION_ID !== 'string') {
-            console.log("❌ Session Error: ❌ SESSION_ID is missing or invalid. Bot will not connect until SESSION_ID is set.");
-            return false;
+            throw new Error("❌ SESSION_ID is missing or invalid");
         }
 
         const id = config.SESSION_ID;
@@ -370,14 +369,12 @@ async function loadSession() {
             fs.writeFileSync(sessionPath, decompressedData, "utf8");
             console.log("✅ Session File Loaded");
         } else {
-            console.error("❌ Session Error: Invalid session format. Expected 'PRINCE-MD~...' or 'PRINCE-MDX!...'");
-            return false;
+            throw new Error("❌ Invalid session format. Expected 'PRINCE-MD~...' or 'PRINCE-MDX!...'");
         }
 
-        return true;
     } catch (e) {
         console.error("❌ Session Error:", e.message);
-        return false;
+        throw e;
     }
 }
 

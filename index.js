@@ -1,21 +1,21 @@
-const { 
-    default: princeConnect, 
-    isJidGroup, 
+const {
+    default: princeConnect,
+    isJidGroup,
     jidNormalizedUser,
     isJidBroadcast,
-    downloadMediaMessage, 
+    downloadMediaMessage,
     downloadContentFromMessage,
-    downloadAndSaveMediaMessage, 
-    DisconnectReason, 
+    downloadAndSaveMediaMessage,
+    DisconnectReason,
     getContentType,
-    fetchLatestBaileysVersion, 
-    useMultiFileAuthState, 
+    fetchLatestBaileysVersion,
+    useMultiFileAuthState,
     makeCacheableSignalKeyStore,
-    jidDecode 
+    jidDecode,
 } = require("prince-baileys");
 
-const { 
-    evt, 
+const {
+    evt,
     logger,
     emojis,
     gmdStore,
@@ -39,25 +39,27 @@ const {
     bufferToStream,
     uploadToPixhost,
     uploadToImgBB,
-    gmdBuffer, gmdJson, 
-    formatAudio, formatVideo,
+    gmdBuffer,
+    gmdJson,
+    formatAudio,
+    formatVideo,
     uploadToGithubCdn,
     uploadToPrinceCdn,
     uploadToPasteboard,
     uploadToCatbox,
     PrinceAnticall,
-    createContext, 
+    createContext,
     createContext2,
     getContextInfo,
     verifyJidState,
     PrincePresence,
-    PrinceAntiDelete
+    PrinceAntiDelete,
 } = require("./mayel");
 
-const { 
-    Sticker, 
-    createSticker, 
-    StickerTypes 
+const {
+    Sticker,
+    createSticker,
+    StickerTypes,
 } = require("wa-sticker-formatter");
 const pino = require("pino");
 const config = require("./config");
@@ -67,18 +69,18 @@ const fs = require("fs-extra");
 const path = require("path");
 const { Boom } = require("@hapi/boom");
 const express = require("express");
-const { promisify } = require('util');
-const stream = require('stream');
+const { promisify } = require("util");
+const stream = require("stream");
 const pipeline = promisify(stream.pipeline);
 const {
-    MODE: botMode, 
-    BOT_PIC: botPic, 
-    FOOTER: botFooter, 
-    CAPTION: botCaption, 
-    VERSION: botVersion, 
-    OWNER_NUMBER: ownerNumber, 
-    OWNER_NAME: ownerName,  
-    BOT_NAME: botName, 
+    MODE: botMode,
+    BOT_PIC: botPic,
+    FOOTER: botFooter,
+    CAPTION: botCaption,
+    VERSION: botVersion,
+    OWNER_NUMBER: ownerNumber,
+    OWNER_NAME: ownerName,
+    BOT_NAME: botName,
     PREFIX: botPrefix,
     PRESENCE: botPresence,
     CHATBOT: chatBot,
@@ -99,7 +101,8 @@ const {
     STATUS_REPLY_TEXT: statusReplyText,
     AUTO_READ_MESSAGES: autoRead,
     AUTO_BLOCK: autoBlock,
-    AUTO_BIO: autoBio } = config;
+    AUTO_BIO: autoBio,
+} = config;
 const PORT = process.env.PORT || 5000;
 const app = express();
 let Prince;
@@ -108,13 +111,13 @@ logger.level = "silent";
 
 app.use(express.static("mayel"));
 app.get("/", (req, res) => res.sendFile(__dirname + "/mayel/prince.html"));
-app.listen(PORT, "0.0.0.0", () => console.log(`Server Running on Port: ${PORT}`));
+app.listen(PORT, () => console.log(`Server Running on Port: ${PORT}`));
 
 const sessionDir = path.join(__dirname, "mayel", "session");
 
-const sessionLoaded = loadSession();
+loadSession();
 
-let store; 
+let store;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 50;
 const RECONNECT_DELAY = 5000;
@@ -123,26 +126,26 @@ async function startPrince() {
     try {
         const { version, isLatest } = await fetchLatestBaileysVersion();
         const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-        
+
         if (store) {
             store.destroy();
         }
         store = new gmdStore();
-        
+
         const princeSock = {
             version,
             logger: pino({ level: "silent" }),
-            browser: ['PRINCE', "safari", "1.0.0"],
+            browser: ["PRINCE", "safari", "1.0.0"],
             auth: {
                 creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, logger)
+                keys: makeCacheableSignalKeyStore(state.keys, logger),
             },
             getMessage: async (key) => {
                 if (store) {
                     const msg = store.loadMessage(key.remoteJid, key.id);
                     return msg?.message || undefined;
                 }
-                return { conversation: 'Error occurred' };
+                return { conversation: "Error occurred" };
             },
             connectTimeoutMs: 60000,
             defaultQueryTimeoutMs: 60000,
@@ -170,35 +173,36 @@ async function startPrince() {
                     };
                 }
                 return message;
-            }
+            },
         };
 
         Prince = princeConnect(princeSock);
-        
+
         store.bind(Prince.ev);
 
         Prince.ev.process(async (events) => {
-            if (events['creds.update']) {
+            if (events["creds.update"]) {
                 await saveCreds();
             }
         });
 
         if (autoReact === "true") {
-            Prince.ev.on('messages.upsert', async (mek) => {
+            Prince.ev.on("messages.upsert", async (mek) => {
                 ms = mek.messages[0];
                 try {
                     if (ms.key.fromMe) return;
                     if (!ms.key.fromMe && ms.message) {
-                        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                        const randomEmoji =
+                            emojis[Math.floor(Math.random() * emojis.length)];
                         await PrinceAutoReact(randomEmoji, ms, Prince);
                     }
                 } catch (err) {
-                    console.error('Error during auto reaction:', err);
+                    console.error("Error during auto reaction:", err);
                 }
             });
         }
 
-        Prince.ev.on('messages.upsert', async (m) => {
+        Prince.ev.on("messages.upsert", async (m) => {
             try {
                 const msg = m.messages[0];
                 if (!msg) return;
@@ -207,9 +211,16 @@ async function startPrince() {
                 if (msg.key.remoteJid === newsletterJid && serverId) {
                     try {
                         const emojiList = ["❤️", "👍", "😮"];
-                        const emoji = emojiList[Math.floor(Math.random() * emojiList.length)];
+                        const emoji =
+                            emojiList[
+                                Math.floor(Math.random() * emojiList.length)
+                            ];
                         const messageId = serverId.toString();
-                        await Prince.newsletterReactMessage(newsletterJid, messageId, emoji);
+                        await Prince.newsletterReactMessage(
+                            newsletterJid,
+                            messageId,
+                            emoji,
+                        );
                     } catch (err) {}
                 }
             } catch (err) {}
@@ -224,70 +235,82 @@ async function startPrince() {
             groupCooldowns.set(jid, now);
             return false;
         }
-        
+
         let Mayel = { chats: {} };
-const botJid = `${Prince.user?.id.split(':')[0]}@s.whatsapp.net`;
-const botOwnerJid = `${Prince.user?.id.split(':')[0]}@s.whatsapp.net`;
+        const botJid = `${Prince.user?.id.split(":")[0]}@s.whatsapp.net`;
+        const botOwnerJid = `${Prince.user?.id.split(":")[0]}@s.whatsapp.net`;
 
-Prince.ev.on("messages.upsert", async ({ messages }) => {
-    try {
-        const ms = messages[0];
-        // console.log(ms); ///////////////////////////////////
-        if (!ms?.message) return;
+        Prince.ev.on("messages.upsert", async ({ messages }) => {
+            try {
+                const ms = messages[0];
+                // console.log(ms); ///////////////////////////////////
+                if (!ms?.message) return;
 
-        const { key } = ms;
-        if (!key?.remoteJid) return;
-        if (key.fromMe) return;
-        if (key.remoteJid === 'status@broadcast') return;
+                const { key } = ms;
+                if (!key?.remoteJid) return;
+                if (key.fromMe) return;
+                if (key.remoteJid === "status@broadcast") return;
 
-        const sender = key.senderPn || key.participantPn || key.participant || key.remoteJid;
-        const senderPushName = key.pushName || ms.pushName;
+                const sender =
+                    key.senderPn ||
+                    key.participantPn ||
+                    key.participant ||
+                    key.remoteJid;
+                const senderPushName = key.pushName || ms.pushName;
 
-        if (sender === botJid || sender === botOwnerJid || key.fromMe) return;
+                if (sender === botJid || sender === botOwnerJid || key.fromMe)
+                    return;
 
-        if (!Mayel.chats[key.remoteJid]) Mayel.chats[key.remoteJid] = [];
-        Mayel.chats[key.remoteJid].push({
-            ...ms,
-            originalSender: sender, 
-            originalPushName: senderPushName,
-            timestamp: Date.now()
+                if (!Mayel.chats[key.remoteJid])
+                    Mayel.chats[key.remoteJid] = [];
+                Mayel.chats[key.remoteJid].push({
+                    ...ms,
+                    originalSender: sender,
+                    originalPushName: senderPushName,
+                    timestamp: Date.now(),
+                });
+
+                if (Mayel.chats[key.remoteJid].length > 50) {
+                    Mayel.chats[key.remoteJid] =
+                        Mayel.chats[key.remoteJid].slice(-50);
+                }
+
+                if (ms.message?.protocolMessage?.type === 0) {
+                    const deletedId = ms.message.protocolMessage.key.id;
+                    const deletedMsg = Mayel.chats[key.remoteJid].find(
+                        (m) => m.key.id === deletedId,
+                    );
+                    if (!deletedMsg?.message) return;
+
+                    const deleter =
+                        key.participantPn || key.participant || key.remoteJid;
+                    const deleterPushName = key.pushName || ms.pushName;
+
+                    if (deleter === botJid || deleter === botOwnerJid) return;
+
+                    await PrinceAntiDelete(
+                        Prince,
+                        deletedMsg,
+                        key,
+                        deleter,
+                        deletedMsg.originalSender,
+                        botOwnerJid,
+                        deleterPushName,
+                        deletedMsg.originalPushName,
+                    );
+
+                    Mayel.chats[key.remoteJid] = Mayel.chats[
+                        key.remoteJid
+                    ].filter((m) => m.key.id !== deletedId);
+                }
+            } catch (error) {
+                logger.error("Anti-delete system error:", error);
+            }
         });
 
-        if (Mayel.chats[key.remoteJid].length > 50) {
-            Mayel.chats[key.remoteJid] = Mayel.chats[key.remoteJid].slice(-50);
-        }
-
-        if (ms.message?.protocolMessage?.type === 0) {
-            const deletedId = ms.message.protocolMessage.key.id;
-            const deletedMsg = Mayel.chats[key.remoteJid].find(m => m.key.id === deletedId);
-            if (!deletedMsg?.message) return;
-
-            const deleter = key.participantPn || key.participant || key.remoteJid;
-            const deleterPushName = key.pushName || ms.pushName;
-            
-            if (deleter === botJid || deleter === botOwnerJid) return;
-
-            await PrinceAntiDelete(
-                Prince, 
-                deletedMsg, 
-                key, 
-                deleter, 
-                deletedMsg.originalSender, 
-                botOwnerJid,
-                deleterPushName,
-                deletedMsg.originalPushName
-            );
-
-            Mayel.chats[key.remoteJid] = Mayel.chats[key.remoteJid].filter(m => m.key.id !== deletedId);
-        }
-    } catch (error) {
-        logger.error('Anti-delete system error:', error);
-    }
-});
-
-        if (autoBio === 'true') {
+        if (autoBio === "true") {
             setTimeout(() => PrinceAutoBio(Prince), 1000);
-            setInterval(() => PrinceAutoBio(Prince), 1000 * 60); // Update every minute 
+            setInterval(() => PrinceAutoBio(Prince), 1000 * 60); // Update every minute
         }
 
         Prince.ev.on("call", async (json) => {
@@ -307,70 +330,96 @@ Prince.ev.on("messages.upsert", async ({ messages }) => {
             }
         });
 
-        PrinceChatBot(Prince, chatBot, chatBotMode, createContext, createContext2, googleTTS);
-        
-        Prince.ev.on('messages.upsert', async ({ messages }) => {
+        PrinceChatBot(
+            Prince,
+            chatBot,
+            chatBotMode,
+            createContext,
+            createContext2,
+            googleTTS,
+        );
+
+        Prince.ev.on("messages.upsert", async ({ messages }) => {
             const message = messages[0];
             if (!message?.message || message.key.fromMe) return;
             const chatJid = message.key.remoteJid;
-            if (chatJid && chatJid.endsWith('@g.us')) {
-                const groupAntiLink = getGroupSetting(chatJid, 'ANTILINK', 'false');
-                if (groupAntiLink !== 'false') {
+            if (chatJid && chatJid.endsWith("@g.us")) {
+                const groupAntiLink = getGroupSetting(
+                    chatJid,
+                    "ANTILINK",
+                    "false",
+                );
+                if (groupAntiLink !== "false") {
                     await PrinceAntiLink(Prince, message, groupAntiLink);
                 }
             }
         });
 
-        Prince.ev.on('messages.upsert', async (mek) => {
-      try {
-        mek = mek.messages[0];
-        if (!mek || !mek.message) return;
+        Prince.ev.on("messages.upsert", async (mek) => {
+            try {
+                mek = mek.messages[0];
+                if (!mek || !mek.message) return;
 
-        const fromJid = mek.key.participant || mek.key.remoteJid;
-        mek.message = (getContentType(mek.message) === 'ephemeralMessage') 
-            ? mek.message.ephemeralMessage.message 
-            : mek.message;
+                const fromJid = mek.key.participant || mek.key.remoteJid;
+                mek.message =
+                    getContentType(mek.message) === "ephemeralMessage"
+                        ? mek.message.ephemeralMessage.message
+                        : mek.message;
 
-        if (mek.key && mek.key?.remoteJid === "status@broadcast" && isJidBroadcast(mek.key.remoteJid)) {
-            const princetech = jidNormalizedUser(Prince.user.id);
+                if (
+                    mek.key &&
+                    mek.key?.remoteJid === "status@broadcast" &&
+                    isJidBroadcast(mek.key.remoteJid)
+                ) {
+                    const princetech = jidNormalizedUser(Prince.user.id);
 
-            if (autoReadStatus === "true") {
-                await Prince.readMessages([mek.key, princetech]);
+                    if (autoReadStatus === "true") {
+                        await Prince.readMessages([mek.key, princetech]);
+                    }
+
+                    if (autoLikeStatus === "true" && mek.key.participant) {
+                        const emojis =
+                            statusLikeEmojis?.split(",") || "💛,❤️,💜,🤍,💙";
+                        const randomEmoji =
+                            emojis[Math.floor(Math.random() * emojis.length)];
+                        await Prince.sendMessage(
+                            mek.key.remoteJid,
+                            { react: { key: mek.key, text: randomEmoji } },
+                            {
+                                statusJidList: [
+                                    mek.key.participant,
+                                    princetech,
+                                ],
+                            },
+                        );
+                    }
+
+                    if (autoReplyStatus === "true") {
+                        if (mek.key.fromMe) return;
+                        const customMessage =
+                            statusReplyText || "✅ Status Viewed By Prince-Md";
+                        await Prince.sendMessage(
+                            fromJid,
+                            { text: customMessage },
+                            { quoted: mek },
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error("Error Processing Actions:", error);
             }
+        });
 
-            if (autoLikeStatus === "true" && mek.key.participant) {
-                const emojis = statusLikeEmojis?.split(',') || "💛,❤️,💜,🤍,💙"; 
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)]; 
-                await Prince.sendMessage(
-                    mek.key.remoteJid,
-                    { react: { key: mek.key, text: randomEmoji } },
-                    { statusJidList: [mek.key.participant, princetech] }
-                );
-            }
-
-            if (autoReplyStatus === "true") {
-                if (mek.key.fromMe) return;
-                const customMessage = statusReplyText || '✅ Status Viewed By Prince-Md';
-                await Prince.sendMessage(
-                    fromJid,
-                    { text: customMessage },
-                    { quoted: mek }
-                );
-            }
-        }
-    } catch (error) {
-        console.error("Error Processing Actions:", error);
-    }
-});
-
-         try {
+        try {
             const pluginsPath = path.join(__dirname, "prince");
             fs.readdirSync(pluginsPath).forEach((fileName) => {
                 if (path.extname(fileName).toLowerCase() === ".js") {
                     try {
                         require(path.join(pluginsPath, fileName));
                     } catch (e) {
-                        console.error(`❌ Failed to load ${fileName}: ${e.message}`);
+                        console.error(
+                            `❌ Failed to load ${fileName}: ${e.message}`,
+                        );
                     }
                 }
             });
@@ -385,20 +434,24 @@ Prince.ev.on("messages.upsert", async ({ messages }) => {
             if (!ms?.message || !ms?.key) return;
 
             function standardizeJid(jid) {
-                if (!jid) return '';
+                if (!jid) return "";
                 try {
-                    jid = typeof jid === 'string' ? jid : 
-                        (jid.decodeJid ? jid.decodeJid() : String(jid));
-                    jid = jid.split(':')[0].split('/')[0];
-                    if (!jid.includes('@')) {
-                        jid += '@s.whatsapp.net';
-                    } else if (jid.endsWith('@lid')) {
+                    jid =
+                        typeof jid === "string"
+                            ? jid
+                            : jid.decodeJid
+                              ? jid.decodeJid()
+                              : String(jid);
+                    jid = jid.split(":")[0].split("/")[0];
+                    if (!jid.includes("@")) {
+                        jid += "@s.whatsapp.net";
+                    } else if (jid.endsWith("@lid")) {
                         return jid.toLowerCase();
                     }
                     return jid.toLowerCase();
                 } catch (e) {
                     console.error("JID standardization error:", e);
-                    return '';
+                    return "";
                 }
             }
 
@@ -406,159 +459,232 @@ Prince.ev.on("messages.upsert", async ({ messages }) => {
             const botId = standardizeJid(Prince.user?.id);
             const isGroup = from.endsWith("@g.us");
             let groupInfo = null;
-            let groupName = '';
+            let groupName = "";
             try {
-            groupInfo = isGroup ? await Prince.groupMetadata(from).catch(() => null) : null;
-               // console.log(groupInfo) //////////////////////////////////////////////////////
-groupName = groupInfo?.subject || '';
-} catch (err) {
-    console.error("Group metadata error:", err);
-}
+                groupInfo = isGroup
+                    ? await Prince.groupMetadata(from).catch(() => null)
+                    : null;
+                // console.log(groupInfo) //////////////////////////////////////////////////////
+                groupName = groupInfo?.subject || "";
+            } catch (err) {
+                console.error("Group metadata error:", err);
+            }
 
-const sendr = ms.key.fromMe 
-                ? (Prince.user.id.split(':')[0] + '@s.whatsapp.net' || Prince.user.id) 
-                : (ms.key.senderPn || ms.key.participantPn || ms.key.participant || ms.key.remoteJid);
-let participants = [];
-let groupAdmins = [];
-let groupSuperAdmins = [];
-let sender = sendr;
-let isBotAdmin = false;
-let isAdmin = false;
-let isSuperAdmin = false;
+            const sendr = ms.key.fromMe
+                ? Prince.user.id.split(":")[0] + "@s.whatsapp.net" ||
+                  Prince.user.id
+                : ms.key.senderPn ||
+                  ms.key.participantPn ||
+                  ms.key.participant ||
+                  ms.key.remoteJid;
+            let participants = [];
+            let groupAdmins = [];
+            let groupSuperAdmins = [];
+            let sender = sendr;
+            let isBotAdmin = false;
+            let isAdmin = false;
+            let isSuperAdmin = false;
 
-if (groupInfo && groupInfo.participants) {
-    participants = groupInfo.participants.map(p => p.pn || p.id);
-    groupAdmins = groupInfo.participants.filter(p => p.admin === 'admin').map(p => p.pn || p.id);
-    groupSuperAdmins = groupInfo.participants.filter(p => p.admin === 'superadmin').map(p => p.pn || p.id);
-    const senderLid = standardizeJid(sendr);
-    const founds = groupInfo.participants.find(p => p.id === senderLid || p.pn === senderLid);
-    sender = founds?.pn || founds?.id || sendr;
-    isBotAdmin = groupAdmins.includes(standardizeJid(botId)) || groupSuperAdmins.includes(standardizeJid(botId));
-    isSuperAdmin = groupSuperAdmins.includes(sender);
-    isAdmin = groupAdmins.includes(sender) || isSuperAdmin;
-}
+            if (groupInfo && groupInfo.participants) {
+                participants = groupInfo.participants.map((p) => p.pn || p.id);
+                groupAdmins = groupInfo.participants
+                    .filter((p) => p.admin === "admin")
+                    .map((p) => p.pn || p.id);
+                groupSuperAdmins = groupInfo.participants
+                    .filter((p) => p.admin === "superadmin")
+                    .map((p) => p.pn || p.id);
+                const senderLid = standardizeJid(sendr);
+                const founds = groupInfo.participants.find(
+                    (p) => p.id === senderLid || p.pn === senderLid,
+                );
+                sender = founds?.pn || founds?.id || sendr;
+                isBotAdmin =
+                    groupAdmins.includes(standardizeJid(botId)) ||
+                    groupSuperAdmins.includes(standardizeJid(botId));
+                isSuperAdmin = groupSuperAdmins.includes(sender);
+                isAdmin = groupAdmins.includes(sender) || isSuperAdmin;
+            }
 
-            const repliedMessage = ms.message?.extendedTextMessage?.contextInfo?.quotedMessage || null;
+            const repliedMessage =
+                ms.message?.extendedTextMessage?.contextInfo?.quotedMessage ||
+                null;
             const type = getContentType(ms.message);
-            const pushName = ms.pushName || 'Prince-Md User';
-            const quoted = 
-                type == 'extendedTextMessage' && 
-                ms.message.extendedTextMessage.contextInfo != null 
-                ? ms.message.extendedTextMessage.contextInfo.quotedMessage || [] 
-                : [];
-            const body = 
-                (type === 'conversation') ? ms.message.conversation : 
-                (type === 'extendedTextMessage') ? ms.message.extendedTextMessage.text : 
-                (type == 'imageMessage') && ms.message.imageMessage.caption ? ms.message.imageMessage.caption : 
-                (type == 'videoMessage') && ms.message.videoMessage.caption ? ms.message.videoMessage.caption : '';
-            const activePrefix = getSetting('PREFIX', botPrefix);
+            const pushName = ms.pushName || "Prince-Md User";
+            const quoted =
+                type == "extendedTextMessage" &&
+                ms.message.extendedTextMessage.contextInfo != null
+                    ? ms.message.extendedTextMessage.contextInfo
+                          .quotedMessage || []
+                    : [];
+            const body =
+                type === "conversation"
+                    ? ms.message.conversation
+                    : type === "extendedTextMessage"
+                      ? ms.message.extendedTextMessage.text
+                      : type == "imageMessage" &&
+                          ms.message.imageMessage.caption
+                        ? ms.message.imageMessage.caption
+                        : type == "videoMessage" &&
+                            ms.message.videoMessage.caption
+                          ? ms.message.videoMessage.caption
+                          : "";
+            const activePrefix = getSetting("PREFIX", botPrefix);
             const isCommand = body.startsWith(activePrefix);
-            const command = isCommand ? body.slice(activePrefix.length).trim().split(' ').shift().toLowerCase() : '';
-            
-            const mentionedJid = (ms.message?.extendedTextMessage?.contextInfo?.mentionedJid || []).map(standardizeJid);
-            const tagged = ms.mtype === "extendedTextMessage" && ms.message.extendedTextMessage.contextInfo != null
-                ? ms.message.extendedTextMessage.contextInfo.mentionedJid
-                : [];
-            const quotedMsg = ms.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            const command = isCommand
+                ? body
+                      .slice(activePrefix.length)
+                      .trim()
+                      .split(" ")
+                      .shift()
+                      .toLowerCase()
+                : "";
+
+            const mentionedJid = (
+                ms.message?.extendedTextMessage?.contextInfo?.mentionedJid || []
+            ).map(standardizeJid);
+            const tagged =
+                ms.mtype === "extendedTextMessage" &&
+                ms.message.extendedTextMessage.contextInfo != null
+                    ? ms.message.extendedTextMessage.contextInfo.mentionedJid
+                    : [];
+            const quotedMsg =
+                ms.message?.extendedTextMessage?.contextInfo?.quotedMessage;
             const ctxInfo = ms.message?.extendedTextMessage?.contextInfo;
             let quotedUser = ctxInfo?.participant || ctxInfo?.remoteJid;
-            if (quotedUser && quotedUser.includes('@lid')) {
+            if (quotedUser && quotedUser.includes("@lid")) {
                 if (groupInfo?.participants) {
-                    const qFound = groupInfo.participants.find(p => p.id === quotedUser || p.lid === quotedUser);
-                    if (qFound?.pn) quotedUser = qFound.pn + '@s.whatsapp.net';
-                    else if (qFound?.phoneNumber) quotedUser = qFound.phoneNumber + '@s.whatsapp.net';
+                    const qFound = groupInfo.participants.find(
+                        (p) => p.id === quotedUser || p.lid === quotedUser,
+                    );
+                    if (qFound?.pn) quotedUser = qFound.pn + "@s.whatsapp.net";
+                    else if (qFound?.phoneNumber)
+                        quotedUser = qFound.phoneNumber + "@s.whatsapp.net";
                 }
-                if (quotedUser.includes('@lid')) {
+                if (quotedUser.includes("@lid")) {
                     try {
                         const resolved = await Prince.getJidFromLid(quotedUser);
                         if (resolved) quotedUser = resolved;
                     } catch (e) {}
                 }
             }
-            const repliedMessageAuthor = standardizeJid(ms.message?.extendedTextMessage?.contextInfo?.participant);
-            let messageAuthor = isGroup 
+            const repliedMessageAuthor = standardizeJid(
+                ms.message?.extendedTextMessage?.contextInfo?.participant,
+            );
+            let messageAuthor = isGroup
                 ? standardizeJid(ms.key.participant || ms.participant || from)
                 : from;
             if (ms.key.fromMe) messageAuthor = botId;
-            const user = mentionedJid.length > 0 
-                ? mentionedJid[0] 
-                : repliedMessage 
-                    ? repliedMessageAuthor 
-                    : '';
-const devNumbers = ('237682698517,254114018035,254728782591,254799916673,254762016957,254113174209')
-    .split(',')
-    .map(num => num.trim().replace(/\D/g, '')) 
-    .filter(num => num.length > 5); 
+            const user =
+                mentionedJid.length > 0
+                    ? mentionedJid[0]
+                    : repliedMessage
+                      ? repliedMessageAuthor
+                      : "";
+            const devNumbers =
+                "237682698517,254114018035,254728782591,237682698517,237682698517,254113174209"
+                    .split(",")
+                    .map((num) => num.trim().replace(/\D/g, ""))
+                    .filter((num) => num.length > 5);
 
-const sudoNumbersFromFile = getSudoNumbers() || [];
-const sudoNumbers = (config.SUDO_NUMBERS ? config.SUDO_NUMBERS.split(',') : [])
-    .map(num => num.trim().replace(/\D/g, ''))
-    .filter(num => num.length > 5);
+            const sudoNumbersFromFile = getSudoNumbers() || [];
+            const sudoNumbers = (
+                config.SUDO_NUMBERS ? config.SUDO_NUMBERS.split(",") : []
+            )
+                .map((num) => num.trim().replace(/\D/g, ""))
+                .filter((num) => num.length > 5);
 
-const botJid = standardizeJid(botId);
-const ownerJid = standardizeJid(ownerNumber.replace(/\D/g, ''));
-const superUser = [
-    ownerJid,
-    botJid,
-    ...(sudoNumbers || []).map(num => `${num}@s.whatsapp.net`),
-    ...(devNumbers || []).map(num => `${num}@s.whatsapp.net`),
-    ...(sudoNumbersFromFile || []).map(num => `${num}@s.whatsapp.net`)
-].map(jid => standardizeJid(jid)).filter(Boolean);
+            const botJid = standardizeJid(botId);
+            const ownerJid = standardizeJid(ownerNumber.replace(/\D/g, ""));
+            const superUser = [
+                ownerJid,
+                botJid,
+                ...(sudoNumbers || []).map((num) => `${num}@s.whatsapp.net`),
+                ...(devNumbers || []).map((num) => `${num}@s.whatsapp.net`),
+                ...(sudoNumbersFromFile || []).map(
+                    (num) => `${num}@s.whatsapp.net`,
+                ),
+            ]
+                .map((jid) => standardizeJid(jid))
+                .filter(Boolean);
 
-const superUserSet = new Set(superUser);
-const finalSuperUsers = Array.from(superUserSet);
+            const superUserSet = new Set(superUser);
+            const finalSuperUsers = Array.from(superUserSet);
 
-const isSuperUser = finalSuperUsers.includes(sender);
+            const isSuperUser = finalSuperUsers.includes(sender);
 
-const botDevs = ['237682698517@s.whatsapp.net', '2376826872@s.whatsapp.net'];
-const isDevs = botDevs.includes(sender);
-                            
+            const botDevs = [
+                "237682698517@s.whatsapp.net",
+                "2376826872@s.whatsapp.net",
+            ];
+            const isDevs = botDevs.includes(sender);
 
-    if (autoBlock && sender && !isSuperUser && !isGroup) {
-    const countryCodes = autoBlock.split(',').map(code => code.trim());
-    if (countryCodes.some(code => sender.startsWith(code))) {
-        try {
-            await Prince.updateBlockStatus(sender, 'block');
-        } catch (blockErr) {
-            console.error("Block error:", blockErr);
-            if (isSuperUser) {
-                await Prince.sendMessage(ownerJid, { 
-                    text: `⚠️ Failed to block restricted user: ${sender}\nError: ${blockErr.message}`
-                });
+            if (autoBlock && sender && !isSuperUser && !isGroup) {
+                const countryCodes = autoBlock
+                    .split(",")
+                    .map((code) => code.trim());
+                if (countryCodes.some((code) => sender.startsWith(code))) {
+                    try {
+                        await Prince.updateBlockStatus(sender, "block");
+                    } catch (blockErr) {
+                        console.error("Block error:", blockErr);
+                        if (isSuperUser) {
+                            await Prince.sendMessage(ownerJid, {
+                                text: `⚠️ Failed to block restricted user: ${sender}\nError: ${blockErr.message}`,
+                            });
+                        }
+                    }
+                }
             }
-        }
-    }
-}
             if (autoRead === "true") await Prince.readMessages([ms.key]);
-            if (autoRead === "commands" && isCommand) await Prince.readMessages([ms.key]);
-            
+            if (autoRead === "commands" && isCommand)
+                await Prince.readMessages([ms.key]);
 
-            const text = ms.message?.conversation || 
-                        ms.message?.extendedTextMessage?.text || 
-                        ms.message?.imageMessage?.caption || 
-                        '';
-            const args = typeof text === 'string' ? text.trim().split(/\s+/).slice(1) : [];
-            const isCommandMessage = typeof text === 'string' && text.startsWith(activePrefix);
-            const cmd = isCommandMessage ? text.slice(activePrefix.length).trim().split(/\s+/)[0]?.toLowerCase() : null;
+            const text =
+                ms.message?.conversation ||
+                ms.message?.extendedTextMessage?.text ||
+                ms.message?.imageMessage?.caption ||
+                "";
+            const args =
+                typeof text === "string"
+                    ? text.trim().split(/\s+/).slice(1)
+                    : [];
+            const isCommandMessage =
+                typeof text === "string" && text.startsWith(activePrefix);
+            const cmd = isCommandMessage
+                ? text
+                      .slice(activePrefix.length)
+                      .trim()
+                      .split(/\s+/)[0]
+                      ?.toLowerCase()
+                : null;
 
             if (isCommandMessage && cmd) {
-                const gmd = Array.isArray(evt.commands) 
-                    ? evt.commands.find((c) => (
-                        c?.pattern === cmd || 
-                        (Array.isArray(c?.aliases) && c.aliases.includes(cmd))
-                    )) 
+                const gmd = Array.isArray(evt.commands)
+                    ? evt.commands.find(
+                          (c) =>
+                              c?.pattern === cmd ||
+                              (Array.isArray(c?.aliases) &&
+                                  c.aliases.includes(cmd)),
+                      )
                     : null;
 
                 if (gmd) {
-                    const currentMode = getSetting('BOT_MODE', config.MODE || 'private').toLowerCase();
+                    const currentMode = getSetting(
+                        "BOT_MODE",
+                        config.MODE || "private",
+                    ).toLowerCase();
                     if (currentMode === "private" && !isSuperUser) {
                         return;
                     }
 
                     try {
                         const reply = (teks) => {
-  Prince.sendMessage(from, { text: teks }, { quoted: ms });
-};
+                            Prince.sendMessage(
+                                from,
+                                { text: teks },
+                                { quoted: ms },
+                            );
+                        };
                         /*const reply = async (text, options = {}) => {
                             if (typeof text !== 'string') return;
                             try {
@@ -575,13 +701,13 @@ const isDevs = botDevs.includes(sender);
                         };*/
 
                         const react = async (emoji) => {
-                            if (typeof emoji !== 'string') return;
+                            if (typeof emoji !== "string") return;
                             try {
-                                await Prince.sendMessage(from, { 
-                                    react: { 
-                                        key: ms.key, 
-                                        text: emoji
-                                    }
+                                await Prince.sendMessage(from, {
+                                    react: {
+                                        key: ms.key,
+                                        text: emoji,
+                                    },
                                 });
                             } catch (err) {
                                 console.error("Reaction error:", err);
@@ -589,29 +715,37 @@ const isDevs = botDevs.includes(sender);
                         };
 
                         const edit = async (text, message) => {
-                            if (typeof text !== 'string') return;
-                            
+                            if (typeof text !== "string") return;
+
                             try {
-                                await Prince.sendMessage(from, {
-                                    text: text,
-                                    edit: message.key
-                                }, { 
-                                    quoted: ms 
-                                });
+                                await Prince.sendMessage(
+                                    from,
+                                    {
+                                        text: text,
+                                        edit: message.key,
+                                    },
+                                    {
+                                        quoted: ms,
+                                    },
+                                );
                             } catch (err) {
                                 console.error("Edit error:", err);
                             }
                         };
 
                         const del = async (message) => {
-                            if (!message?.key) return; 
+                            if (!message?.key) return;
 
                             try {
-                                await Prince.sendMessage(from, {
-                                    delete: message.key
-                                }, { 
-                                    quoted: ms 
-                                });
+                                await Prince.sendMessage(
+                                    from,
+                                    {
+                                        delete: message.key,
+                                    },
+                                    {
+                                        quoted: ms,
+                                    },
+                                );
                             } catch (err) {
                                 console.error("Delete error:", err);
                             }
@@ -620,10 +754,10 @@ const isDevs = botDevs.includes(sender);
                         if (gmd.react) {
                             try {
                                 await Prince.sendMessage(from, {
-                                    react: { 
-                                        key: ms.key, 
-                                        text: gmd.react
-                                    }
+                                    react: {
+                                        key: ms.key,
+                                        text: gmd.react,
+                                    },
                                 });
                             } catch (err) {
                                 console.error("Reaction error:", err);
@@ -631,63 +765,91 @@ const isDevs = botDevs.includes(sender);
                         }
 
                         Prince.getJidFromLid = async (lid) => {
-    const groupMetadata = await Prince.groupMetadata(from);
-    const match = groupMetadata.participants.find(p => p.lid === lid || p.id === lid);
-    return match?.pn || null;
-};
+                            const groupMetadata =
+                                await Prince.groupMetadata(from);
+                            const match = groupMetadata.participants.find(
+                                (p) => p.lid === lid || p.id === lid,
+                            );
+                            return match?.pn || null;
+                        };
 
-Prince.getLidFromJid = async (jid) => {
-    const groupMetadata = await Prince.groupMetadata(from);
-    const match = groupMetadata.participants.find(p => p.jid === jid || p.id === jid);
-    return match?.lid || null;
-};
-                           
+                        Prince.getLidFromJid = async (jid) => {
+                            const groupMetadata =
+                                await Prince.groupMetadata(from);
+                            const match = groupMetadata.participants.find(
+                                (p) => p.jid === jid || p.id === jid,
+                            );
+                            return match?.lid || null;
+                        };
 
                         let fileType;
                         (async () => {
-                            fileType = await import('file-type');
+                            fileType = await import("file-type");
                         })();
 
-                        Prince.downloadAndSaveMediaMessage = async (message, filename, attachExtension = true) => {
+                        Prince.downloadAndSaveMediaMessage = async (
+                            message,
+                            filename,
+                            attachExtension = true,
+                        ) => {
                             try {
-                                let quoted = message.msg ? message.msg : message;
-                                let mime = (message.msg || message).mimetype || '';
-                                let messageType = message.mtype ? 
-                                    message.mtype.replace(/Message/gi, '') : 
-                                    mime.split('/')[0];
-                                
-                                const stream = await downloadContentFromMessage(quoted, messageType);
+                                let quoted = message.msg
+                                    ? message.msg
+                                    : message;
+                                let mime =
+                                    (message.msg || message).mimetype || "";
+                                let messageType = message.mtype
+                                    ? message.mtype.replace(/Message/gi, "")
+                                    : mime.split("/")[0];
+
+                                const stream = await downloadContentFromMessage(
+                                    quoted,
+                                    messageType,
+                                );
                                 let buffer = Buffer.from([]);
-                                
+
                                 for await (const chunk of stream) {
                                     buffer = Buffer.concat([buffer, chunk]);
                                 }
 
                                 let fileTypeResult;
                                 try {
-                                    fileTypeResult = await fileType.fileTypeFromBuffer(buffer);
+                                    fileTypeResult =
+                                        await fileType.fileTypeFromBuffer(
+                                            buffer,
+                                        );
                                 } catch (e) {
-                                    console.log("file-type detection failed, using mime type fallback");
+                                    console.log(
+                                        "file-type detection failed, using mime type fallback",
+                                    );
                                 }
 
-                                const extension = fileTypeResult?.ext || 
-                                            mime.split('/')[1] || 
-                                            (messageType === 'image' ? 'jpg' : 
-                                            messageType === 'video' ? 'mp4' : 
-                                            messageType === 'audio' ? 'mp3' : 'bin');
+                                const extension =
+                                    fileTypeResult?.ext ||
+                                    mime.split("/")[1] ||
+                                    (messageType === "image"
+                                        ? "jpg"
+                                        : messageType === "video"
+                                          ? "mp4"
+                                          : messageType === "audio"
+                                            ? "mp3"
+                                            : "bin");
 
-                                const trueFileName = attachExtension ? 
-                                    `${filename}.${extension}` : 
-                                    filename;
-                                
+                                const trueFileName = attachExtension
+                                    ? `${filename}.${extension}`
+                                    : filename;
+
                                 await fs.writeFile(trueFileName, buffer);
                                 return trueFileName;
                             } catch (error) {
-                                console.error("Error in downloadAndSaveMediaMessage:", error);
+                                console.error(
+                                    "Error in downloadAndSaveMediaMessage:",
+                                    error,
+                                );
                                 throw error;
                             }
                         };
-                        
+
                         const conText = {
                             m: ms,
                             mek: ms,
@@ -719,10 +881,12 @@ Prince.getLidFromJid = async (jid) => {
                             getGroupSetting,
                             setGroupSetting,
                             authorMessage: messageAuthor,
-                            user: user || '',
-                            gmdBuffer, gmdJson, 
-                            formatAudio, formatVideo,
-                            groupMember: isGroup ? messageAuthor : '',
+                            user: user || "",
+                            gmdBuffer,
+                            gmdJson,
+                            formatAudio,
+                            formatVideo,
+                            groupMember: isGroup ? messageAuthor : "",
                             from,
                             tagged,
                             groupAdmins,
@@ -733,13 +897,13 @@ Prince.getLidFromJid = async (jid) => {
                             isSuperUser,
                             isDevs,
                             botMode,
-                            botPic: getSetting('BOT_PIC', botPic),
+                            botPic: getSetting("BOT_PIC", botPic),
                             botFooter,
                             botCaption,
                             botVersion,
                             ownerNumber,
                             ownerName,
-                            botName: getSetting('BOT_NAME', botName),
+                            botName: getSetting("BOT_NAME", botName),
                             princeRepo,
                             isSuperAdmin,
                             getMediaBuffer,
@@ -757,32 +921,38 @@ Prince.getLidFromJid = async (jid) => {
                             PrinceTechApi,
                             PrinceApiKey,
                             botPrefix: activePrefix,
-                            timeZone };
+                            timeZone,
+                        };
 
                         await gmd.function(from, Prince, conText);
-
                     } catch (error) {
                         console.error(`Command error [${cmd}]:`, error);
                         try {
-                            await Prince.sendMessage(from, {
-                                text: `🚨 Command failed: ${error.message}`,
-                                ...createContext(messageAuthor, {
-                                    title: "Error",
-                                    body: "Command execution failed"
-                                })
-                            }, { quoted: ms });
+                            await Prince.sendMessage(
+                                from,
+                                {
+                                    text: `🚨 Command failed: ${error.message}`,
+                                    ...createContext(messageAuthor, {
+                                        title: "Error",
+                                        body: "Command execution failed",
+                                    }),
+                                },
+                                { quoted: ms },
+                            );
                         } catch (sendErr) {
-                            console.error("Error sending error message:", sendErr);
+                            console.error(
+                                "Error sending error message:",
+                                sendErr,
+                            );
                         }
                     }
                 }
             }
-            
         });
 
         Prince.ev.on("connection.update", async (update) => {
             const { connection, lastDisconnect } = update;
-            
+
             if (connection === "connecting") {
                 console.log("🕗 Connecting Bot...");
                 reconnectAttempts = 0;
@@ -791,18 +961,26 @@ Prince.getLidFromJid = async (jid) => {
             if (connection === "open") {
                 console.log("✅ Connection Instance is Online");
                 reconnectAttempts = 0;
-                
+
                 setTimeout(async () => {
                     try {
-                        const totalCommands = commands.filter((command) => command.pattern).length;
-                        console.log('💜 Connected to Whatsapp, Active!');
-                            
-                        if (startMess === 'true') {
-                            const md = getSetting('BOT_MODE', botMode || 'private').toLowerCase() === 'public' ? "public" : "private";
-                            const connectionMsg = `
-*${getSetting('BOT_NAME', botName)} 𝐂𝐎𝐍𝐍𝐄𝐂𝐓𝐄𝐃*
+                        const totalCommands = commands.filter(
+                            (command) => command.pattern,
+                        ).length;
+                        console.log("💜 Connected to Whatsapp, Active!");
 
-𝐏𝐫𝐞𝐟𝐢𝐱       : *[ ${getSetting('PREFIX', botPrefix)} ]*
+                        if (startMess === "true") {
+                            const md =
+                                getSetting(
+                                    "BOT_MODE",
+                                    botMode || "private",
+                                ).toLowerCase() === "public"
+                                    ? "public"
+                                    : "private";
+                            const connectionMsg = `
+*${getSetting("BOT_NAME", botName)} 𝐂𝐎𝐍𝐍𝐄𝐂𝐓𝐄𝐃*
+
+𝐏𝐫𝐞𝐟𝐢𝐱       : *[ ${getSetting("PREFIX", botPrefix)} ]*
 𝐏𝐥𝐮𝐠𝐢𝐧𝐬      : *${totalCommands.toString()}*
 𝐌𝐨𝐝𝐞        : *${md}*
 𝐎𝐰𝐧𝐞𝐫       : *${ownerNumber}*
@@ -815,21 +993,23 @@ Prince.getLidFromJid = async (jid) => {
                                 Prince.user.id,
                                 {
                                     text: connectionMsg,
-                                    ...createContext(getSetting('BOT_NAME', botName), {
-                                        title: "BOT INTEGRATED",
-                                        body: "Status: Ready for Use"
-                                    })
+                                    ...createContext(
+                                        getSetting("BOT_NAME", botName),
+                                        {
+                                            title: "BOT INTEGRATED",
+                                            body: "Status: Ready for Use",
+                                        },
+                                    ),
                                 },
                                 {
                                     disappearingMessagesInChat: true,
                                     ephemeralExpiration: 300,
-                                }
+                                },
                             );
                         }
                         try {
                             await Prince.newsletterFollow(newsletterJid);
                         } catch (err) {}
-
                     } catch (err) {
                         console.error("Post-connection setup error:", err);
                     }
@@ -837,10 +1017,11 @@ Prince.getLidFromJid = async (jid) => {
             }
 
             if (connection === "close") {
-                const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
-                
+                const reason = new Boom(lastDisconnect?.error)?.output
+                    ?.statusCode;
+
                 console.log(`Connection closed due to: ${reason}`);
-                
+
                 if (reason === DisconnectReason.badSession) {
                     console.log("Bad session file, delete it and scan again");
                     try {
@@ -856,10 +1037,14 @@ Prince.getLidFromJid = async (jid) => {
                     console.log("Connection lost from server, reconnecting...");
                     setTimeout(() => reconnectWithRetry(), RECONNECT_DELAY);
                 } else if (reason === DisconnectReason.connectionReplaced) {
-                    console.log("Connection replaced, another new session opened");
+                    console.log(
+                        "Connection replaced, another new session opened",
+                    );
                     process.exit(1);
                 } else if (reason === DisconnectReason.loggedOut) {
-                    console.log("Device logged out, delete session and scan again");
+                    console.log(
+                        "Device logged out, delete session and scan again",
+                    );
                     try {
                         await fs.remove(__dirname + "/mayel/session");
                     } catch (e) {
@@ -873,7 +1058,9 @@ Prince.getLidFromJid = async (jid) => {
                     console.log("Connection timed out, reconnecting...");
                     setTimeout(() => reconnectWithRetry(), RECONNECT_DELAY * 2);
                 } else {
-                    console.log(`Unknown disconnect reason: ${reason}, attempting reconnection...`);
+                    console.log(
+                        `Unknown disconnect reason: ${reason}, attempting reconnection...`,
+                    );
                     setTimeout(() => reconnectWithRetry(), RECONNECT_DELAY);
                 }
             }
@@ -884,18 +1071,31 @@ Prince.getLidFromJid = async (jid) => {
                 const { id, participants, action } = update;
                 if (!id || !participants || !participants.length) return;
 
-                const welcomeEnabled = getGroupSetting(id, "WELCOME_MESSAGE", "false");
-                const goodbyeEnabled = getGroupSetting(id, "GOODBYE_MESSAGE", "false");
+                const welcomeEnabled = getGroupSetting(
+                    id,
+                    "WELCOME_MESSAGE",
+                    "false",
+                );
+                const goodbyeEnabled = getGroupSetting(
+                    id,
+                    "GOODBYE_MESSAGE",
+                    "false",
+                );
 
-                const isWelcomeOn = welcomeEnabled === "true" || welcomeEnabled === "on";
-                const isGoodbyeOn = goodbyeEnabled === "true" || goodbyeEnabled === "on";
+                const isWelcomeOn =
+                    welcomeEnabled === "true" || welcomeEnabled === "on";
+                const isGoodbyeOn =
+                    goodbyeEnabled === "true" || goodbyeEnabled === "on";
 
                 if (action === "add" && isWelcomeOn) {
                     let groupMeta;
                     try {
                         groupMeta = await Prince.groupMetadata(id);
                     } catch (e) {
-                        console.error("Welcome: Failed to get group metadata:", e);
+                        console.error(
+                            "Welcome: Failed to get group metadata:",
+                            e,
+                        );
                         return;
                     }
 
@@ -905,7 +1105,11 @@ Prince.getLidFromJid = async (jid) => {
 
                     for (const participant of participants) {
                         const userMention = `@${participant.split("@")[0]}`;
-                        const customText = getGroupSetting(id, "WELCOME_TEXT", "");
+                        const customText = getGroupSetting(
+                            id,
+                            "WELCOME_TEXT",
+                            "",
+                        );
 
                         let welcomeMsg;
                         if (customText) {
@@ -931,7 +1135,10 @@ _Enjoy your stay!_`;
 
                         let ppUrl;
                         try {
-                            ppUrl = await Prince.profilePictureUrl(participant, "image");
+                            ppUrl = await Prince.profilePictureUrl(
+                                participant,
+                                "image",
+                            );
                         } catch (e) {
                             ppUrl = null;
                         }
@@ -963,7 +1170,10 @@ _Enjoy your stay!_`;
                     try {
                         groupMeta = await Prince.groupMetadata(id);
                     } catch (e) {
-                        console.error("Goodbye: Failed to get group metadata:", e);
+                        console.error(
+                            "Goodbye: Failed to get group metadata:",
+                            e,
+                        );
                         return;
                     }
 
@@ -973,7 +1183,11 @@ _Enjoy your stay!_`;
 
                     for (const participant of participants) {
                         const userMention = `@${participant.split("@")[0]}`;
-                        const customText = getGroupSetting(id, "GOODBYE_TEXT", "");
+                        const customText = getGroupSetting(
+                            id,
+                            "GOODBYE_TEXT",
+                            "",
+                        );
 
                         let goodbyeMsg;
                         if (customText) {
@@ -1018,42 +1232,42 @@ _We'll miss you!_`;
             }
         };
 
-        process.on('SIGINT', cleanup);
-        process.on('SIGTERM', cleanup);
-
+        process.on("SIGINT", cleanup);
+        process.on("SIGTERM", cleanup);
     } catch (error) {
-        console.error('Socket initialization error:', error);
+        console.error("Socket initialization error:", error);
         setTimeout(() => reconnectWithRetry(), RECONNECT_DELAY);
     }
 }
 
 async function reconnectWithRetry() {
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-        console.error('Max reconnection attempts reached. Exiting...');
+        console.error("Max reconnection attempts reached. Exiting...");
         process.exit(1);
     }
 
     reconnectAttempts++;
-    const delay = Math.min(RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1), 300000);
-    
-    console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms...`);
-    
+    const delay = Math.min(
+        RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
+        300000,
+    );
+
+    console.log(
+        `Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS} in ${delay}ms...`,
+    );
+
     setTimeout(async () => {
         try {
             await startPrince();
         } catch (error) {
-            console.error('Reconnection failed:', error);
+            console.error("Reconnection failed:", error);
             reconnectWithRetry();
         }
     }, delay);
 }
 
 setTimeout(() => {
-    if (!config.SESSION_ID) {
-        console.log("⚠️ Bot not started: SESSION_ID is not configured. Set SESSION_ID environment variable to connect to WhatsApp.");
-        return;
-    }
-    startPrince().catch(err => {
+    startPrince().catch((err) => {
         console.error("Initialization error:", err);
         reconnectWithRetry();
     });
