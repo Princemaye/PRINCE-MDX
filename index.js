@@ -1054,28 +1054,10 @@ async function startPrince() {
             ) {
                 const quotedText = repliedMessage.conversation || repliedMessage.extendedTextMessage?.text || repliedMessage.imageMessage?.caption || repliedMessage.videoMessage?.caption || "";
 
-                // Status Mention Reply Handler
-                if (quotedText.includes("𝐒𝐓𝐀𝐓𝐔𝐒 𝐌𝐄𝐍𝐓𝐈𝐎𝐍 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒")) {
-                    if (!isAdmin && !isSuperAdmin) return;
-                    const choice = body.trim();
-                    let action = "";
-                    if (choice === "1") action = "warn";
-                    else if (choice === "2") action = "delete";
-                    else if (choice === "3") action = "kick";
-                    else if (choice === "4") action = "off";
-
-                    if (action) {
-                        const gMeta = await Prince.groupMetadata(from);
-                        const memberCount = gMeta.participants.length;
-                        if (action === "off") {
-                            setGroupSetting(from, "STATUS_MENTION", "false");
-                            await Prince.sendMessage(from, { text: `✅ Status Mention DISABLED.` });
-                        } else {
-                            setGroupSetting(from, "STATUS_MENTION", action);
-                            await Prince.sendMessage(from, { text: `✅ Status Mention ENABLED: ${action.toUpperCase()}` });
-                        }
-                    }
-                }
+                // Status Mention Reply Handler - Moved to prince/group.js for interactive handling
+                /* if (quotedText.includes("𝐒𝐓𝐀𝐓𝐔𝐒 𝐌𝐄𝐍𝐓𝐈𝐎𝐍 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒")) {
+                    ...
+                } */
             }
         });
 

@@ -543,7 +543,7 @@ _Or use directly:_
 │ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘɪɴᴄᴇ ᴛᴇᴄʜ  
 ╰─────────────────◆`;
 
-      return Prince.sendMessage(
+      const sentMsg = await Prince.sendMessage(
         from,
         {
           image: { url: botPic },
@@ -552,6 +552,56 @@ _Or use directly:_
         },
         { quoted: conText.mek || conText.ms },
       );
+
+      const handler = async (mek) => {
+        try {
+          const message = mek.messages[0];
+          if (!message.message || message.key.fromMe) return;
+
+          const chatId = message.key.remoteJid;
+          if (chatId !== from) return;
+
+          const isReplyToMenu =
+            message.message?.extendedTextMessage?.contextInfo?.stanzaId === sentMsg.key.id;
+          
+          if (isReplyToMenu) {
+            const messageContent = (
+              message.message?.conversation ||
+              message.message?.extendedTextMessage?.text ||
+              ""
+            ).trim();
+
+            let action = "";
+            let responseText = "";
+
+            if (messageContent === "1") {
+              action = "warn";
+              responseText = `✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*\n👥 *Members:* ${memberCount}`;
+            } else if (messageContent === "2") {
+              action = "delete";
+              responseText = `✅ *Anti-Group Mention* is now *ENABLED* with action: *DELETE*\n👥 *Members:* ${memberCount}`;
+            } else if (messageContent === "3") {
+              action = "kick";
+              responseText = `✅ *Anti-Group Mention* is now *ENABLED* with action: *KICK*\n👥 *Members:* ${memberCount}`;
+            } else if (messageContent === "4") {
+              action = "false";
+              responseText = `✅ *Anti-Group Mention* is now *DISABLED* in this group.\n👥 *Members:* ${memberCount}`;
+            }
+
+            if (action) {
+              Prince.ev.off("messages.upsert", handler);
+              setGroupSetting(from, "STATUS_MENTION", action);
+              return reply(responseText);
+            }
+          }
+        } catch (e) {
+          console.error("Status mention menu error:", e);
+        }
+      };
+
+      Prince.ev.on("messages.upsert", handler);
+      setTimeout(() => Prince.ev.off("messages.upsert", handler), 60000);
+      return;
     }
 
     if (status === "on" || status === "true" || status === "enable" || status === "warn" || status === "1") {
