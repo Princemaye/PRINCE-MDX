@@ -642,7 +642,7 @@ async function startPrince() {
             if (autoRead === "commands" && isCommand) await Prince.readMessages([ms.key]);
 
             // ============ ANTI-GROUP MENTION SYSTEM ============
-            const antiMentionSetting = getGroupSetting(from, 'MENTION', 'false').toLowerCase();
+            const antiMentionSetting = getGroupSetting(from, 'STATUS_MENTION', 'false').toLowerCase();
             
             if (
                 isGroup &&
@@ -653,7 +653,7 @@ async function startPrince() {
             ) {
                 try {
                     if (!isBotAdmin) {
-                        await Prince.sendMessage(from, { text: '*The ANTI_GROUP_MENTION process is enabled in this group, but the bot needs to be an admin to run. ⛔️*' }, { quoted: ms });
+                        await Prince.sendMessage(from, { text: '*The STATUS_MENTION process is enabled in this group, but the bot needs to be an admin to run. ⛔️*' }, { quoted: ms });
                     } else if (isSuperUser) {
                         // Skip superusers/owners
                     } else {

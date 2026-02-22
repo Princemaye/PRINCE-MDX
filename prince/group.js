@@ -490,8 +490,8 @@ gmd(
 
 gmd(
   {
-    pattern: "mention",
-    aliases: ["antimention", "tagall-kick"],
+    pattern: "statusmention",
+    aliases: ["antimention", "tagall-kick", "mention"],
     category: "group",
     desc: "Enable/disable anti-group mention and set action (on/off/warn/kick/delete)",
   },
@@ -502,19 +502,19 @@ gmd(
 
     const status = args[0]?.toLowerCase();
     if (status === "on" || status === "true" || status === "enable" || status === "warn") {
-      setGroupSetting(from, "MENTION", "warn");
+      setGroupSetting(from, "STATUS_MENTION", "warn");
       return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*");
     } else if (status === "kick") {
-      setGroupSetting(from, "MENTION", "kick");
+      setGroupSetting(from, "STATUS_MENTION", "kick");
       return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *KICK*");
     } else if (status === "delete") {
-      setGroupSetting(from, "MENTION", "delete");
+      setGroupSetting(from, "STATUS_MENTION", "delete");
       return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *DELETE*");
     } else if (status === "off" || status === "false" || status === "disable") {
-      setGroupSetting(from, "MENTION", "false");
+      setGroupSetting(from, "STATUS_MENTION", "false");
       return reply("✅ *Anti-Group Mention* is now *DISABLED* in this group.");
     } else {
-      return reply(`*Usage:* .mention on/off/warn/kick/delete`);
+      return reply(`*Usage:* .statusmention on/off/warn/kick/delete`);
     }
   }
 );

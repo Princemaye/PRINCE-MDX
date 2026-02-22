@@ -625,7 +625,7 @@ gmd(
       const goodbyeStatus = isSettingEnabled(settings.GOODBYE_MESSAGE) ? "ON" : "OFF";
       const eventsStatus = isSettingEnabled(settings.GROUP_EVENTS) ? "ON" : "OFF";
       const antilinkStatus = isSettingEnabled(settings.ANTILINK) ? "ON" : "OFF";
-      const mentionStatus = isSettingEnabled(settings.MENTION) ? "ON" : "OFF";
+      const mentionStatus = isSettingEnabled(settings.STATUS_MENTION) ? "ON" : "OFF";
 
       const antilinkRaw = settings.ANTILINK || "off";
       let antilinkAction = "delete";
@@ -652,7 +652,7 @@ gmd(
       }
       msg += `│ 🛡️ *Mention:* ${mentionStatus}\n`;
       if (mentionStatus === "ON") {
-        msg += `│ └ Action: ${settings.MENTION || "warn"}\n`;
+        msg += `│ └ Action: ${settings.STATUS_MENTION || "warn"}\n`;
       }
       msg += `│\n`;
       msg += `╰━━━━━━━━━━━╯\n`;
