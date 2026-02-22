@@ -402,19 +402,55 @@ gmd({
     isSuperUser,
     isAdmin,
     isGroup,
-    quotedMsg,
-    quotedKey,
     isBotAdmin,
+    ms
   } = conText;
 
   if (!isGroup) return reply("❌ This command only works in groups!");
   if (!isSuperUser && !isAdmin) return reply("❌ Admin/Owner Only Command!");
 
-  if (!quotedMsg || !quotedKey)
+  const botId = conText.botId || (Prince.user?.id ? Prince.user.id.split(":")[0] + "@s.whatsapp.net" : "");
+  
+  // High-reliability key extraction
+  const getMessageKey = () => {
+    // 1. From conText.quoted (helper populated)
+    if (conText.quoted && conText.quoted.id) {
+      return {
+        remoteJid: from,
+        fromMe: conText.quoted.fromMe,
+        id: conText.quoted.id,
+        participant: conText.quoted.sender || (conText.quoted.key && conText.quoted.key.participant)
+      };
+    }
+    
+    // 2. From raw message structure (ms.message)
+    const contextInfo = ms.message?.extendedTextMessage?.contextInfo || 
+                        ms.message?.imageMessage?.contextInfo || 
+                        ms.message?.videoMessage?.contextInfo ||
+                        ms.message?.documentWithCaptionMessage?.message?.documentMessage?.contextInfo ||
+                        ms.message?.viewOnceMessage?.message?.imageMessage?.contextInfo ||
+                        ms.message?.viewOnceMessageV2?.message?.imageMessage?.contextInfo;
+
+    if (contextInfo && contextInfo.stanzaId) {
+      return {
+        remoteJid: from,
+        fromMe: contextInfo.participant === botId || contextInfo.participant === Prince.user?.id,
+        id: contextInfo.stanzaId,
+        participant: contextInfo.participant
+      };
+    }
+    
+    return null;
+  };
+
+  const key = getMessageKey();
+
+  if (!key || !key.id) {
     return reply("❌ Please quote a message to delete!");
+  }
 
   try {
-    const isBotMessage = quotedKey.fromMe;
+    const isBotMessage = key.fromMe;
 
     if (!isBotMessage && !isBotAdmin) {
       return reply(
@@ -422,9 +458,10 @@ gmd({
       );
     }
 
-    await Prince.sendMessage(from, { delete: quotedKey });
+    await Prince.sendMessage(from, { delete: key });
     await react("✅");
   } catch (error) {
+    console.error("Delete error details:", error);
     await react("❌");
     return reply(`❌ Failed to delete message: ${error.message}`);
   }
