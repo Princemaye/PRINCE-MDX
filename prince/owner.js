@@ -408,12 +408,26 @@ gmd({
       participant: quoted.sender || quoted.key.participant || from,
     };
 
+    // If it's a group, we might need to use the participant from the key if quoted.sender is missing
+    if (from.endsWith('@g.us')) {
+        // Ensure participant is present for group message deletion
+        if (!key.participant || key.participant === from) {
+            key.participant = quoted.key.participant || quoted.sender;
+        }
+    }
+
     await Prince.sendMessage(from, { delete: key });
     await react("✅");
   } catch (e) {
-    console.log("Delete error:", e);
+    console.log("Delete error details:", JSON.stringify(e, null, 2));
+    console.log("Delete error message:", e.message);
     await react("❌");
-    reply(`*Failed to delete message: ${e.message}*`);
+    
+    // If it's a permission error, let the user know
+    if (e.message.includes('not-authorized') || e.status === 403) {
+      return reply("❌ *Error:* I need to be an admin to delete other people's messages in groups.");
+    }
+    reply(`*Failed to delete message: ${e.message || 'Unknown error'}*`);
   }
 });
 
