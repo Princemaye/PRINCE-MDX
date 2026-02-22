@@ -1052,7 +1052,7 @@ async function startPrince() {
                 body &&
                 !isNaN(body)
             ) {
-                const quotedText = repliedMessage.conversation || repliedMessage.extendedTextMessage?.text || "";
+                const quotedText = repliedMessage.conversation || repliedMessage.extendedTextMessage?.text || repliedMessage.imageMessage?.caption || repliedMessage.videoMessage?.caption || "";
 
                 // Status Mention Reply Handler
                 if (quotedText.includes("𝐒𝐓𝐀𝐓𝐔𝐒 𝐌𝐄𝐍𝐓𝐈𝐎𝐍 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒")) {
