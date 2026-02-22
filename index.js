@@ -997,6 +997,7 @@ async function startPrince() {
                             PrinceApiKey,
                             botPrefix: activePrefix,
                             timeZone,
+                            args
                         };
 
                         await gmd.function(from, Prince, conText);
