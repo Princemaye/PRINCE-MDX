@@ -1081,7 +1081,7 @@ gmd({
     }
 
     const commandPath = commandData.filename;
-    const fullCode = await fs.readFile(commandPath, 'utf-8');
+    const fullCode = await fs.promises.readFile(commandPath, 'utf-8');
     const extractCommand = (code, pattern) => {
       const possibleStarts = [
         `gmd({\n  pattern: "${pattern}"`,
