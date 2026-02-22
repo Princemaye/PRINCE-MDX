@@ -3,7 +3,7 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
-
+/*
 function copyFolderSync(source, destination, excludeList = []) {
   if (!fs.existsSync(destination)) fs.mkdirSync(destination, { recursive: true });
   const items = fs.readdirSync(source);
@@ -23,6 +23,7 @@ function copyFolderSync(source, destination, excludeList = []) {
     }
   }
 }
+*/
 
 gmd(
   {
@@ -63,7 +64,7 @@ gmd(
       const commitMessage = commitData.commit.message;
 
       await reply(
-        `🔄 Updating Bot...\n\n*Commit Details:*\n👤 Author: ${authorName} (${authorEmail})\n📅 Date: ${commitDate}\n💬 Message: ${commitMessage}`
+        `🔄 Updating Bot...\n\n*Commit Details:*\n👤 Author: ${authorName} \n📅 Date: ${commitDate}\n💬 Message: ${commitMessage}`
       );
 
       const repoParts = repoName.split("/");
