@@ -493,7 +493,7 @@ gmd(
     pattern: "mention",
     aliases: ["antimention", "tagall-kick"],
     category: "group",
-    desc: "Enable or disable anti-group mention",
+    desc: "Enable/disable anti-group mention and set action (on/off/warn/kick/delete)",
   },
   async (from, Prince, conText) => {
     const { reply, isAdmin, isSuperUser, args } = conText;
@@ -501,14 +501,20 @@ gmd(
     if (!isAdmin && !isSuperUser) return reply("❌ Admin Only Command!");
 
     const status = args[0]?.toLowerCase();
-    if (status === "on" || status === "true" || status === "enable") {
-      setGroupSetting(from, "MENTION", "true");
-      return reply("✅ *Anti-Group Mention* is now *ENABLED* in this group.");
+    if (status === "on" || status === "true" || status === "enable" || status === "warn") {
+      setGroupSetting(from, "MENTION", "warn");
+      return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *WARN*");
+    } else if (status === "kick") {
+      setGroupSetting(from, "MENTION", "kick");
+      return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *KICK*");
+    } else if (status === "delete") {
+      setGroupSetting(from, "MENTION", "delete");
+      return reply("✅ *Anti-Group Mention* is now *ENABLED* with action: *DELETE*");
     } else if (status === "off" || status === "false" || status === "disable") {
       setGroupSetting(from, "MENTION", "false");
       return reply("✅ *Anti-Group Mention* is now *DISABLED* in this group.");
     } else {
-      return reply(`*Usage:* .mention on/off`);
+      return reply(`*Usage:* .mention on/off/warn/kick/delete`);
     }
   }
 );

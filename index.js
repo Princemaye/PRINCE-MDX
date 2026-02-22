@@ -642,12 +642,11 @@ async function startPrince() {
             if (autoRead === "commands" && isCommand) await Prince.readMessages([ms.key]);
 
             // ============ ANTI-GROUP MENTION SYSTEM ============
-            const antiMentionStatus = getGroupSetting(from, 'MENTION', 'false');
-            const antiMentionAction = getSetting('MENTION_MODE', config.MENTION_MODE || 'warn').toLowerCase();
+            const antiMentionSetting = getGroupSetting(from, 'MENTION', 'false').toLowerCase();
             
             if (
                 isGroup &&
-                antiMentionStatus === 'true' &&
+                antiMentionSetting !== 'false' &&
                 !ms.key.fromMe &&
                 !isAdmin &&
                 type === 'groupStatusMentionMessage'
@@ -657,13 +656,12 @@ async function startPrince() {
                         await Prince.sendMessage(from, { text: '*The ANTI_GROUP_MENTION process is enabled in this group, but the bot needs to be an admin to run. ⛔️*' }, { quoted: ms });
                     } else if (isSuperUser) {
                         // Skip superusers/owners
-                    } else if (antiMentionAction === 'false') {
-                        // Disabled
                     } else {
                         // STEP 1: ALWAYS DELETE THE MESSAGE FIRST
                         await Prince.sendMessage(from, { delete: ms.key });
                         
                         const senderNumber = sender.split('@')[0];
+                        const antiMentionAction = antiMentionSetting === 'true' ? 'warn' : antiMentionSetting;
                         
                         // STEP 2: APPLY THE SELECTED ACTION
                         if (antiMentionAction === 'delete') {
@@ -679,7 +677,6 @@ async function startPrince() {
                             await Prince.groupParticipantsUpdate(from, [sender], "remove");
                             resetWarnings(from, sender);
                         } else if (antiMentionAction === 'warn') {
-                            const userWarns = getUserWarnings(from, sender);
                             const newWarningCount = addWarning(from, sender, "Sent group mention message", "anti-group-mention");
                             
                             let warningMessage = '';

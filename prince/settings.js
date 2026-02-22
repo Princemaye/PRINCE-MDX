@@ -651,6 +651,9 @@ gmd(
         msg += `│ └ Action: ${antilinkAction}\n`;
       }
       msg += `│ 🛡️ *Mention:* ${mentionStatus}\n`;
+      if (mentionStatus === "ON") {
+        msg += `│ └ Action: ${settings.MENTION || "warn"}\n`;
+      }
       msg += `│\n`;
       msg += `╰━━━━━━━━━━━╯\n`;
       msg += `\n_Use .setwelcome, .setgoodbye, .antilink, etc to modify_`;
