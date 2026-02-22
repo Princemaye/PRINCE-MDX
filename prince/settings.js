@@ -687,9 +687,48 @@ gmd(
     if (!text) {
       const current = getGroupSetting(from, "WELCOME_MESSAGE", "off");
       const status = isSettingEnabled(current) ? "ON" : "OFF";
-      return reply(
-        `👋 *Welcome Message*\n\n📍 *Group:* ${groupName || "This Group"}\n📌 *Status:* ${status}\n\n*Usage:*\n*.setwelcome on* - Enable welcome messages\n*.setwelcome off* - Disable welcome messages\n*.setwelcome <text>* - Set custom welcome message\n*Reply to a message* with *.setwelcome* to use that text\n\n*Variables for custom message:*\n{user} - Mentions the user\n{group} - Group name\n{desc} - Group description`
-      );
+      const menuText = `👋 *Welcome Message Settings*
+
+📍 *Group:* ${groupName || "This Group"}
+📌 *Status:* ${status}
+
+Reply With:
+*1.* Enable Welcome
+*2.* Disable Welcome
+*3.* Set Custom Message (Type your message)
+
+*Variables:* {user}, {group}, {desc}`;
+
+      const sentMsg = await Prince.sendMessage(from, {
+        image: { url: botPic },
+        caption: menuText,
+        contextInfo: getContextInfo(sender, newsletterJid, botName),
+      }, { quoted: mek });
+
+      const handler = async (event) => {
+        const ms = event.messages[0];
+        if (!ms?.message || ms.key.fromMe) return;
+        if (ms.message?.extendedTextMessage?.contextInfo?.stanzaId === sentMsg.key.id) {
+          const input = (ms.message.conversation || ms.message.extendedTextMessage?.text || "").trim();
+          if (input === "1") {
+            Prince.ev.off("messages.upsert", handler);
+            setGroupSetting(from, "WELCOME_MESSAGE", "true");
+            return reply("✅ Welcome message *enabled*.");
+          } else if (input === "2") {
+            Prince.ev.off("messages.upsert", handler);
+            setGroupSetting(from, "WELCOME_MESSAGE", "false");
+            return reply("✅ Welcome message *disabled*.");
+          } else if (input.length > 1) {
+            Prince.ev.off("messages.upsert", handler);
+            setGroupSetting(from, "WELCOME_MESSAGE", "true");
+            setGroupSetting(from, "WELCOME_TEXT", input);
+            return reply(`✅ Custom welcome message set!\n\n*Preview:*\n${input}`);
+          }
+        }
+      };
+      Prince.ev.on("messages.upsert", handler);
+      setTimeout(() => Prince.ev.off("messages.upsert", handler), 60000);
+      return;
     }
 
     const input = text.toLowerCase();
@@ -734,9 +773,48 @@ gmd(
     if (!text) {
       const current = getGroupSetting(from, "GOODBYE_MESSAGE", "off");
       const status = isSettingEnabled(current) ? "ON" : "OFF";
-      return reply(
-        `👋 *Goodbye Message*\n\n📍 *Group:* ${groupName || "This Group"}\n📌 *Status:* ${status}\n\n*Usage:*\n*.setgoodbye on* - Enable goodbye messages\n*.setgoodbye off* - Disable goodbye messages\n*.setgoodbye <text>* - Set custom goodbye message\n*Reply to a message* with *.setgoodbye* to use that text\n\n*Variables for custom message:*\n{user} - Mentions the user\n{group} - Group name\n{desc} - Group description`
-      );
+      const menuText = `👋 *Goodbye Message Settings*
+
+📍 *Group:* ${groupName || "This Group"}
+📌 *Status:* ${status}
+
+Reply With:
+*1.* Enable Goodbye
+*2.* Disable Goodbye
+*3.* Set Custom Message (Type your message)
+
+*Variables:* {user}, {group}, {desc}`;
+
+      const sentMsg = await Prince.sendMessage(from, {
+        image: { url: botPic },
+        caption: menuText,
+        contextInfo: getContextInfo(sender, newsletterJid, botName),
+      }, { quoted: mek });
+
+      const handler = async (event) => {
+        const ms = event.messages[0];
+        if (!ms?.message || ms.key.fromMe) return;
+        if (ms.message?.extendedTextMessage?.contextInfo?.stanzaId === sentMsg.key.id) {
+          const input = (ms.message.conversation || ms.message.extendedTextMessage?.text || "").trim();
+          if (input === "1") {
+            Prince.ev.off("messages.upsert", handler);
+            setGroupSetting(from, "GOODBYE_MESSAGE", "true");
+            return reply("✅ Goodbye message *enabled*.");
+          } else if (input === "2") {
+            Prince.ev.off("messages.upsert", handler);
+            setGroupSetting(from, "GOODBYE_MESSAGE", "false");
+            return reply("✅ Goodbye message *disabled*.");
+          } else if (input.length > 1) {
+            Prince.ev.off("messages.upsert", handler);
+            setGroupSetting(from, "GOODBYE_MESSAGE", "true");
+            setGroupSetting(from, "GOODBYE_TEXT", input);
+            return reply(`✅ Custom goodbye message set!\n\n*Preview:*\n${input}`);
+          }
+        }
+      };
+      Prince.ev.on("messages.upsert", handler);
+      setTimeout(() => Prince.ev.off("messages.upsert", handler), 60000);
+      return;
     }
 
     const input = text.toLowerCase();
