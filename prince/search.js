@@ -665,3 +665,129 @@ gmd(
     }
   },
 );
+
+gmd(
+  {
+    pattern: "npm",
+    aliases: ["npminfo", "package", "pkginfo"],
+    category: "search",
+    react: "📦",
+    description: "Get detailed information about npm packages",
+  },
+  async (from, Prince, conText) => {
+    const { q, mek, reply, react, prefix, sender, botName, newsletterJid, getContextInfo } = conText;
+
+    try {
+      if (!q) {
+        await react("❌");
+        return await reply(`❌ *Please provide a package name!*\n\n📝 *Usage:* ${prefix}npm <package-name>\n📝 *Example:* ${prefix}npm express`);
+      }
+
+      const packageName = q.trim().toLowerCase();
+      await react("📦");
+
+      try {
+        // Fetch package data from npm registry
+        const response = await axios.get(`https://registry.npmjs.org/${packageName}`, {
+          timeout: 10000
+        });
+
+        const packageData = response.data;
+        const latestVersion = packageData['dist-tags']?.latest || 'Unknown';
+        const versions = Object.keys(packageData.versions || {});
+        const latestVersionData = packageData.versions?.[latestVersion] || {};
+
+        // Format the information
+        let info = `*𝐍𝐏𝐌 𝐏𝐀𝐂𝐊𝐀𝐆𝐄 𝐈𝐍𝐅𝐎𝐑𝐌𝐀𝐓𝐈𝐎𝐍*\n\n`;
+        info += `➠ *Name*           : ${packageData.name || 'N/A'}\n`;
+        info += `➠ *Description*    : ${packageData.description || 'No description available'}\n`;
+        info += `➠ *Latest Version* : ${latestVersion}\n`;
+        info += `➠ *Total Versions* : ${versions.length}\n`;
+        info += `➠ *Author*         : ${packageData.author?.name || latestVersionData.author?.name || 'N/A'}\n`;
+        info += `➠ *Homepage*       : ${packageData.homepage || latestVersionData.homepage || 'N/A'}\n`;
+        info += `➠ *License*        : ${packageData.license || latestVersionData.license || 'N/A'}\n`;
+
+        // Repository information
+        if (packageData.repository?.url || latestVersionData.repository?.url) {
+          const repoUrl = (packageData.repository?.url || latestVersionData.repository?.url)
+            .replace('git+', '')
+            .replace('.git', '')
+            .replace('git://', 'https://');
+          info += `➠ *Repository*     : ${repoUrl}\n`;
+        }
+
+        // Keywords
+        const keywords = packageData.keywords || latestVersionData.keywords || [];
+        if (keywords.length > 0) {
+          info += `➠ *Keywords*       : ${keywords.slice(0, 5).join(', ')}${keywords.length > 5 ? '...' : ''}\n`;
+        }
+
+        // Dependencies
+        const dependencies = latestVersionData.dependencies || {};
+        const depCount = Object.keys(dependencies).length;
+        if (depCount > 0) {
+          info += `➠ *Dependencies*   : ${depCount}\n`;
+        }
+
+        // Download stats (using npms.io API for additional stats)
+        try {
+          const statsResponse = await axios.get(`https://api.npms.io/v2/package/${packageName}`, {
+            timeout: 5000
+          });
+          const stats = statsResponse.data;
+
+          if (stats.evaluation?.popularity?.downloadsCount) {
+            info += `➠ *Downloads*      : ${stats.evaluation.popularity.downloadsCount.toLocaleString()}\n`;
+          }
+
+          if (stats.score?.final) {
+            const score = (stats.score.final * 100).toFixed(1);
+            info += `➠ *Quality Score*  : ${score}%\n`;
+          }
+        } catch (statsError) {
+          // Stats API failed, continue without stats
+        }
+
+        // Installation command
+        info += `\n💻 *Installation:*\n`;
+        info += `\`\`\`npm install ${packageName}\`\`\`\n`;
+        info += `\`\`\`yarn add ${packageName}\`\`\`\n\n`;
+
+        // Links
+        info += `🔗 *Links:*\n`;
+        info += `• NPM: https://www.npmjs.com/package/${packageName}\n`;
+
+        if (packageData.repository?.url) {
+          const repoUrl = packageData.repository.url
+            .replace('git+', '')
+            .replace('.git', '')
+            .replace('git://', 'https://');
+          info += `• Repository: ${repoUrl}\n`;
+        }
+
+        info += `\n> *${config.FOOTER || "𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗"}*`;
+
+        // Send with NPM logo
+        await Prince.sendMessage(from, {
+          image: { url: "https://raw.githubusercontent.com/npm/logos/master/npm%20logo/npm-logo-red.png" },
+          caption: info,
+          contextInfo: getContextInfo(sender, newsletterJid, botName)
+        }, { quoted: mek });
+        await react("✅");
+
+      } catch (apiError) {
+        if (apiError.response?.status === 404) {
+          await react("❌");
+          await reply(`❌ *Package not found!*\n\n🔍 Package "${packageName}" doesn't exist on NPM registry.\n\n💡 *Tip:* Check the package name spelling and try again.`);
+        } else {
+          throw apiError;
+        }
+      }
+
+    } catch (error) {
+      console.error('NPM Plugin Error:', error);
+      await react("❌");
+      await reply(`❌ *Error occurred while fetching package information*\n\n🔧 *Error:* ${error.message}\n\n💡 *Try again later or check your internet connection.*`);
+    }
+  }
+);
