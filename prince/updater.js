@@ -3,27 +3,34 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const AdmZip = require("adm-zip");
-/*
+
+// FIXED copy function
 function copyFolderSync(source, destination, excludeList = []) {
-  if (!fs.existsSync(destination)) fs.mkdirSync(destination, { recursive: true });
+  if (!fs.existsSync(destination)) {
+    fs.mkdirSync(destination, { recursive: true });
+  }
+
   const items = fs.readdirSync(source);
+
   for (const item of items) {
     const srcPath = path.join(source, item);
     const destPath = path.join(destination, item);
     const relativePath = path.relative(source, srcPath);
-    if (excludeList.some(ex => relativePath === ex || relativePath.startsWith(ex + path.sep))) continue;
+
+    // Skip excluded files
+    if (excludeList.some(ex => relativePath.startsWith(ex))) {
+      continue;
+    }
+
     const stat = fs.statSync(srcPath);
+
     if (stat.isDirectory()) {
-      copyFolderSync(source, destination, excludeList.map(ex => {
-        if (ex.startsWith(item + '/') || ex.startsWith(item + path.sep)) return ex.slice(item.length + 1);
-        return ex;
-      }));
+      copyFolderSync(srcPath, destPath, excludeList);
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
   }
 }
-*/
 
 gmd(
   {
@@ -34,7 +41,7 @@ gmd(
     category: "owner",
   },
   async (from, Prince, conText) => {
-    const { q, mek, react, reply, isSuperUser } = conText;
+    const { react, reply, isSuperUser } = conText;
 
     if (!isSuperUser) {
       await react("❌");
@@ -44,7 +51,7 @@ gmd(
     try {
       await reply("🔍 Checking for New Updates...");
 
-      // FORCE REPO TO PRINCE-MDX
+      // FORCE PRINCE-MDX REPO
       const repoName = "Princemaye/PRINCE-MDX";
 
       const { data: commitData } = await axios.get(
@@ -60,19 +67,24 @@ gmd(
 
       const authorName = commitData.commit.author.name;
       const authorEmail = commitData.commit.author.email;
-      const commitDate = new Date(commitData.commit.author.date).toLocaleString();
+      const commitDate = new Date(
+        commitData.commit.author.date
+      ).toLocaleString();
       const commitMessage = commitData.commit.message;
 
       await reply(
-        `🔄 Updating Bot...\n\n*Commit Details:*\n👤 Author: ${authorName} \n📅 Date: ${commitDate}\n💬 Message: ${commitMessage}`
+        `🔄 Updating Bot...\n\n` +
+        `👤 Author: ${authorName} (${authorEmail})\n` +
+        `📅 Date: ${commitDate}\n` +
+        `💬 Message: ${commitMessage}`
       );
 
-      const repoParts = repoName.split("/");
-      const repoShort = repoParts[1];
+      const repoShort = "PRINCE-MDX";
       const branch = "main";
 
-      const zipPath = path.join(__dirname, "..", `${repoShort}-${branch}.zip`);
+      const zipPath = path.join(__dirname, "..", `${repoShort}.zip`);
 
+      // Download ZIP
       const { data: zipData } = await axios.get(
         `https://github.com/${repoName}/archive/${branch}.zip`,
         { responseType: "arraybuffer" }
@@ -80,24 +92,37 @@ gmd(
 
       fs.writeFileSync(zipPath, zipData);
 
+      // Extract ZIP
       const extractPath = path.join(__dirname, "..", "latest");
       const zip = new AdmZip(zipPath);
       zip.extractAllTo(extractPath, true);
 
-      const sourcePath = path.join(extractPath, `${repoShort}-${branch}`);
+      const sourcePath = path.join(
+        extractPath,
+        `${repoShort}-${branch}`
+      );
+
       const destinationPath = path.join(__dirname, "..");
 
       const excludeList = [
         ".env",
+        "session",
         "mayel/prince.db",
-        "mayel/session",
       ];
 
+      // Copy files
       copyFolderSync(sourcePath, destinationPath, excludeList);
+
       setSetting("COMMIT_HASH", latestCommitHash);
 
-      try { fs.unlinkSync(zipPath); } catch {}
-      try { fs.rmSync(extractPath, { recursive: true, force: true }); } catch {}
+      // Cleanup
+      try {
+        fs.unlinkSync(zipPath);
+      } catch {}
+
+      try {
+        fs.rmSync(extractPath, { recursive: true, force: true });
+      } catch {}
 
       await reply("✅ Update Complete! Bot is Restarting...");
 
