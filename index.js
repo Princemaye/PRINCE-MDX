@@ -997,7 +997,9 @@ async function startPrince() {
                             PrinceApiKey,
                             botPrefix: activePrefix,
                             timeZone,
-                            args
+                            args,
+                            mek: ms,
+                            ms
                         };
 
                         await gmd.function(from, Prince, conText);
@@ -1048,12 +1050,19 @@ async function startPrince() {
                     if (action) {
                         const gMeta = await Prince.groupMetadata(from);
                         const memberCount = gMeta.participants.length;
+                        const groupName = gMeta.subject;
                         if (action === "off") {
                             setGroupSetting(from, "STATUS_MENTION", "false");
-                            await Prince.sendMessage(from, { text: `✅ *Anti-Group Mention* is now *DISABLED* in this group.\n👥 *Members:* ${memberCount}` }, { quoted: ms });
+                            await Prince.sendMessage(from, { 
+                                text: `✅ *Anti-Group Mention* is now *DISABLED* in this group.\n👥 *Members:* ${memberCount}`,
+                                contextInfo: getContextInfo(sender, newsletterJid, botName)
+                            }, { quoted: ms });
                         } else {
                             setGroupSetting(from, "STATUS_MENTION", action);
-                            await Prince.sendMessage(from, { text: `✅ *Anti-Group Mention* is now *ENABLED* with action: *${action.toUpperCase()}*\n👥 *Members:* ${memberCount}` }, { quoted: ms });
+                            await Prince.sendMessage(from, { 
+                                text: `✅ *Anti-Group Mention* is now *ENABLED* with action: *${action.toUpperCase()}*\n👥 *Members:* ${memberCount}`,
+                                contextInfo: getContextInfo(sender, newsletterJid, botName)
+                            }, { quoted: ms });
                         }
                     }
                 }
