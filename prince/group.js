@@ -501,7 +501,7 @@ gmd(
     if (!isAdmin && !isSuperUser) return reply("❌ Admin Only Command!");
 
     const status = (args[0] || "").toLowerCase();
-    const gMeta = await Prince.groupMetadata(from);
+    const gMeta = conText.groupMetadata || await Prince.groupMetadata(from);
     const memberCount = gMeta.participants.length;
     const groupName = gMeta.subject;
 
