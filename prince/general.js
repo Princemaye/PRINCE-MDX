@@ -82,7 +82,10 @@ gmd({
 │ ✦ *Dᴀᴛᴇ Tᴏᴅᴀʏ* : ${monospace(date)}
 │ ✦ *Tɪᴍᴇ Zᴏɴᴇ* : ${monospace(timeZone)}
 │ ✦ *Sᴇʀᴠᴇʀ Rᴀᴍ* : ${monospace(ram)}
-╰─────────────────╯${readmore}\n`;
+╰──────────────╯\n
+*Deploy here 👇👇*
+host.princetechn.com 
+${readmore}\n`;
 
       // 🔥 Gifted-style category formatter
       const formatCategory = (category, gmds) => {
