@@ -103,14 +103,22 @@ gmd(
       );
 
       const destinationPath = path.join(__dirname, "..");
-
+/*
       const excludeList = [
         ".env",
         "session",
         "config.js",
         "mayel/prince.db",
       ];
-
+*/
+      const excludeList = [
+  ".env",
+  "session",
+  "config.js",
+  "mayel/prince.db",
+  "node_modules",
+  "package-lock.json",
+];
       // Copy files
       copyFolderSync(sourcePath, destinationPath, excludeList);
 
@@ -129,7 +137,7 @@ gmd(
 
    setTimeout(() => {
   process.exit(0);
-}, 2000);
+}, 5000);
 
     } catch (error) {
       console.error("Update error:", error);
