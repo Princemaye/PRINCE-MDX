@@ -128,7 +128,7 @@ gmd(
       await reply("✅ Update Complete! Bot is Restarting...");
 
    setTimeout(() => {
-  process.exit(1);
+  process.exit(0);
 }, 2000);
 
     } catch (error) {
