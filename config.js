@@ -10,7 +10,7 @@ module.exports = {
     BOT_NAME : process.env.BOT_NAME || '𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗',
     FOOTER : process.env.FOOTER || 'ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴘʀɪɴᴄᴇ ᴛᴇᴄʜ',
     CAPTION : process.env.CAPTION || '©𝟐𝟎𝟐𝟒 𝐏𝐑𝐈𝐍𝐂𝐄 𝐌𝐃𝐗 𝐕𝟓',
-    VERSION: process.env.VERSION || '5.0.0',
+    VERSION: process.env.VERSION || '4.0.0',
     BOT_PIC : process.env.BOT_PIC || 'https://raw.githubusercontent.com/Mayelprince/url/main/menun.jpg',            
     MODE: process.env.MODE || "public",
     PM_PERMIT: process.env.PM_PERMIT || 'false',
